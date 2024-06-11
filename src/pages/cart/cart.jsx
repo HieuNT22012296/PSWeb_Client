@@ -26,8 +26,8 @@ export const Cart = () => {
 
       {totalAmount > 0 ? (
         <div className="checkout">
-          <p> Subtotal: ${totalAmount} </p>
-          <button onClick={() => navigate("/")}> Continue Shopping </button>
+          <p> Tổng tiền: ${totalAmount} </p>
+          <button onClick={() => navigate("/")}> Quay về </button>
           <button
             onClick={() => {
               checkout();
@@ -35,7 +35,7 @@ export const Cart = () => {
             }}
           >
             {" "}
-            Checkout{" "}
+            Mua hàng{" "}
           </button>
         </div>
       ) : (
