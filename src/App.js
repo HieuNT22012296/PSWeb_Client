@@ -4,6 +4,7 @@ import { Navbar } from "./components/navbar";
 import { Shop } from "./pages/Shop/shop";
 import { Cart } from "./pages/cart/cart";
 import { ShopContextProvider } from "./context/shop-context";
+import { Payment } from "./pages/payment/Payment"
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Shop />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path= "/payment" element={<Payment/>} />
           </Routes>
         </Router>
       </ShopContextProvider>
