@@ -68,7 +68,7 @@ const Order = () => {
     try {
       const response = await postOrder(orderData);
       console.log("Order posted successfully:", response);
-      navigate("/payment"); // Chuyển hướng sang trang thanh toán
+      navigate("/payment", { state: { orderData: response } }); 
     } catch (error) {
       console.error("Failed to post order:", error);
       if (error.response && error.response.data) {

@@ -60,5 +60,5 @@ export const routes = [
   {
     path: "/orders/:user_id",
     page: OrderList,
-  }
+  },
 ];

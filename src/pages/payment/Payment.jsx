@@ -6,6 +6,11 @@ import { ShopContext } from "../../context/shop-context";
 import { processPayment } from "../../services/PaymentService"; // Import hàm processPayment
 
 export const Payment = () => {
+  const formatDate = (isoString) => {
+    const date = new Date(isoString);
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return date.toLocaleDateString(undefined, options);
+  };
   const { getTotalCartAmount } = useContext(ShopContext);
   const total = getTotalCartAmount();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("cod");
@@ -31,13 +36,10 @@ export const Payment = () => {
       const response = await processPayment(paymentInfo);
       console.log("Payment processed:", response);
       if (response.success) {
-        navigate("/payment-success");
-      } else {
-        navigate("/payment-failure");
+        navigate("/");
       }
     } catch (error) {
       console.error("Error processing payment:", error);
-      navigate("/payment-failure");
     }
   };
 
@@ -181,7 +183,7 @@ export const Payment = () => {
                   </div>
                   <div className="p-2 d-flex justify-content-between">
                     <div className="fw-bold">Payment Date</div>
-                    <div>{orderData?.created_at}</div>
+                    <div>{formatDate(orderData?.created_at)}</div>
                   </div>
                   <div className="p-2 d-flex justify-content-between">
                     <div className="fw-bold">Status</div>
@@ -190,7 +192,7 @@ export const Payment = () => {
                   <div className="border-top my-3" />
                   <div className="p-2 d-flex justify-content-between">
                     <div className="fw-bold">Total</div>
-                    <div className="text-success">{total}</div>
+                    <div className="text-success">{orderData?.total_price}</div>
                   </div>
                 </div>
               </div>
