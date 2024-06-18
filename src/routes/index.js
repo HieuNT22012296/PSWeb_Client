@@ -9,6 +9,8 @@ import Order from "../pages/Order/Order";
 import OrderDetail from "../pages/OrderDetails/OrderDetail";
 import ProductDetails from "../pages/ProductDetails/ProductDetails";
 import Admin from "../pages/Admin/Admin";
+import ContactForm from "../pages/contact/ContactForm";
+import OrderList from "../pages/Order/OrderList";
 
 export const routes = [
   {
@@ -40,15 +42,23 @@ export const routes = [
     page: Order,
   },
   {
-    path: "/order-details",
+    path: "/order-details/:id",
     page: OrderDetail,
   },
   {
-    path: "/product-details",
+    path: "/product-details/:id",
     page: ProductDetails,
   },
   {
     path: "/dashboard",
     page: Admin,
   },
+  {
+    path: "/contact",
+    page: ContactForm,
+  },
+  {
+    path: "/orders/:user_id",
+    page: OrderList,
+  }
 ];

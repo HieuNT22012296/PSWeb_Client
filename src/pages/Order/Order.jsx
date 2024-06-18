@@ -1,6 +1,82 @@
-import React from "react";
+import React, { useContext, useState } from "react";
+import { ShopContext } from "../../context/shop-context";
+import { postOrder } from "../../services/OrderService";
+import { useNavigate } from "react-router-dom";
+
 
 const Order = () => {
+  const { cartItems, products, getTotalCartAmount } = useContext(ShopContext);
+  const totalAmount = getTotalCartAmount();
+  const navigate = useNavigate();
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    fullName: "",
+    address: "",
+    city: "",
+    phone: "",
+    paymentMethod: "",
+  });
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData({ ...formData, [id]: value });
+  };
+
+  const handleRadioChange = (e) => {
+    setFormData({ ...formData, paymentMethod: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+  
+    // Tạo danh sách các sản phẩm trong đơn hàng
+    const orderItems = products.filter(product => cartItems[product.id] > 0)
+      .map(product => ({
+        product_id: product.id,  // Convert product_id to string
+        name: product.name,
+        quantity: cartItems[product.id],
+        price: product.price.toString(), // Convert price to string
+      }));
+  
+    // Kiểm tra xem giỏ hàng có sản phẩm hay không
+    if (orderItems.length === 0) {
+      setError("Your cart is empty. Please add products to your cart before placing an order.");
+      return;
+    }
+  
+    // Tạo dữ liệu đơn hàng
+    const orderData = {
+      payment_method: formData.paymentMethod,
+      total_price: totalAmount.toString(), // Convert total price to string
+      shipping_price: "5.00", // Add actual shipping price if any
+      user_id: 1, // Replace with actual user ID
+      is_paid: false,
+      paid_at: null,
+      is_delivered: false,
+      delivered_at: null,
+      order_items: orderItems,
+      shipping_address: {
+        full_name: formData.fullName,
+        address: formData.address,
+        city: formData.city,
+        phone: formData.phone,
+      },
+    };
+  
+    console.log("Order data:", orderData);  // Log order data for debugging
+  
+    try {
+      const response = await postOrder(orderData);
+      console.log("Order posted successfully:", response);
+      navigate("/payment"); // Chuyển hướng sang trang thanh toán
+    } catch (error) {
+      console.error("Failed to post order:", error);
+      if (error.response && error.response.data) {
+        console.error("Error details:", error.response.data);
+      }
+    }
+  };
+
   return (
     <>
       <meta charSet="utf-8" />
@@ -8,18 +84,10 @@ const Order = () => {
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no"
       />
-      <meta name="description" content="" />
-      <meta
-        name="author"
-        content="Mark Otto, Jacob Thornton, and Bootstrap contributors"
-      />
-      <meta name="generator" content="Jekyll v3.8.5" />
-      <title>Checkout example · Bootstrap</title>
       <link
         rel="canonical"
         href="https://getbootstrap.com/docs/4.3/examples/checkout/"
       />
-      {/* Bootstrap core CSS */}
       <link
         href="/docs/4.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
@@ -32,142 +100,70 @@ const Order = () => {
             "\n      .bd-placeholder-img {\n        font-size: 1.125rem;\n        text-anchor: middle;\n        -webkit-user-select: none;\n        -moz-user-select: none;\n        -ms-user-select: none;\n        user-select: none;\n      }\n\n      @media (min-width: 768px) {\n        .bd-placeholder-img-lg {\n          font-size: 3.5rem;\n        }\n      }\n    ",
         }}
       />
-      {/* Custom styles for this template */}
       <link href="form-validation.css" rel="stylesheet" />
-      <div className="container">
-        <div className="py-5 text-center">
-          <img
-            className="d-block mx-auto mb-4"
-            src="https://getbootstrap.com/docs/4.3/assets/brand/bootstrap-solid.svg"
-            alt=""
-            width={72}
-            height={72}
-          />
-          <h2>Checkout form</h2>
-          <p className="lead">
-            Below is an example form built entirely with Bootstrap’s form
-            controls. Each required form group has a validation state that can
-            be triggered by attempting to submit the form without completing it.
-          </p>
-        </div>
+      <div className="container mt-5 mb-5">
         <div className="row">
           <div className="col-md-4 order-md-2 mb-4">
             <h4 className="d-flex justify-content-between align-items-center mb-3">
               <span className="text-muted">Your cart</span>
-              <span className="badge badge-secondary badge-pill">3</span>
+              <span className="badge badge-secondary badge-pill">
+                {Object.keys(cartItems).reduce((total, item) => total + cartItems[item], 0)}
+              </span>
             </h4>
             <ul className="list-group mb-3">
-              <li className="list-group-item d-flex justify-content-between lh-condensed">
-                <div>
-                  <h6 className="my-0">Product name</h6>
-                  <small className="text-muted">Brief description</small>
-                </div>
-                <span className="text-muted">$12</span>
-              </li>
-              <li className="list-group-item d-flex justify-content-between lh-condensed">
-                <div>
-                  <h6 className="my-0">Second product</h6>
-                  <small className="text-muted">Brief description</small>
-                </div>
-                <span className="text-muted">$8</span>
-              </li>
-              <li className="list-group-item d-flex justify-content-between lh-condensed">
-                <div>
-                  <h6 className="my-0">Third item</h6>
-                  <small className="text-muted">Brief description</small>
-                </div>
-                <span className="text-muted">$5</span>
-              </li>
-              <li className="list-group-item d-flex justify-content-between bg-light">
-                <div className="text-success">
-                  <h6 className="my-0">Promo code</h6>
-                  <small>EXAMPLECODE</small>
-                </div>
-                <span className="text-success">-$5</span>
-              </li>
+              {products.map((product) => {
+                if (cartItems[product.id] > 0) {
+                  return (
+                    <li key={product.id} className="list-group-item d-flex justify-content-between lh-condensed">
+                      <div>
+                        <h6 className="my-0">{product.name} x {cartItems[product.id]}</h6>
+                      </div>
+                      <span className="text-muted">${product.price}</span>
+                    </li>
+                  );
+                }
+                return null;
+              })}
               <li className="list-group-item d-flex justify-content-between">
                 <span>Total (USD)</span>
-                <strong>$20</strong>
+                <strong>${totalAmount}</strong>
               </li>
             </ul>
-            <form className="card p-2">
-              <div className="input-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Promo code"
-                />
-                <div className="input-group-append">
-                  <button type="submit" className="btn btn-secondary">
-                    Redeem
-                  </button>
-                </div>
-              </div>
-            </form>
           </div>
           <div className="col-md-8 order-md-1">
             <h4 className="mb-3">Billing address</h4>
-            <form className="needs-validation" noValidate="">
+            <form className="needs-validation" noValidate="" onSubmit={handleSubmit}>
+              {error && <div className="alert alert-danger">{error}</div>}
               <div className="row">
                 <div className="col-md-6 mb-3">
-                  <label htmlFor="firstName">First name</label>
+                  <label htmlFor="fullName">Full name</label>
                   <input
                     type="text"
                     className="form-control"
-                    id="firstName"
+                    id="fullName"
                     placeholder=""
-                    defaultValue=""
                     required=""
+                    value={formData.fullName}
+                    onChange={handleInputChange}
                   />
                   <div className="invalid-feedback">
-                    Valid first name is required.
+                    Valid full name is required.
                   </div>
                 </div>
                 <div className="col-md-6 mb-3">
-                  <label htmlFor="lastName">Last name</label>
+                  <label htmlFor="phone">Phone Number</label>
                   <input
-                    type="text"
+                    type="tel"
                     className="form-control"
-                    id="lastName"
-                    placeholder=""
-                    defaultValue=""
+                    id="phone"
+                    placeholder="123-456-7890"
                     required=""
+                    value={formData.phone}
+                    onChange={handleInputChange}
                   />
                   <div className="invalid-feedback">
-                    Valid last name is required.
+                    Please enter a valid phone number.
                   </div>
-                </div>
-              </div>
-              <div className="mb-3">
-                <label htmlFor="username">Username</label>
-                <div className="input-group">
-                  <div className="input-group-prepend">
-                    <span className="input-group-text">@</span>
-                  </div>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="username"
-                    placeholder="Username"
-                    required=""
-                  />
-                  <div className="invalid-feedback" style={{ width: "100%" }}>
-                    Your username is required.
-                  </div>
-                </div>
-              </div>
-              <div className="mb-3">
-                <label htmlFor="email">
-                  Email <span className="text-muted">(Optional)</span>
-                </label>
-                <input
-                  type="email"
-                  className="form-control"
-                  id="email"
-                  placeholder="you@example.com"
-                />
-                <div className="invalid-feedback">
-                  Please enter a valid email address for shipping updates.
                 </div>
               </div>
               <div className="mb-3">
@@ -178,206 +174,80 @@ const Order = () => {
                   id="address"
                   placeholder="1234 Main St"
                   required=""
+                  value={formData.address}
+                  onChange={handleInputChange}
                 />
                 <div className="invalid-feedback">
                   Please enter your shipping address.
                 </div>
               </div>
               <div className="mb-3">
-                <label htmlFor="address2">
-                  Address 2 <span className="text-muted">(Optional)</span>
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="address2"
-                  placeholder="Apartment or suite"
-                />
+                <label htmlFor="city">City</label>
+                <select
+                  className="custom-select d-block w-100"
+                  id="city"
+                  required=""
+                  value={formData.city}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Choose...</option>
+                  <option value="Ho Chi Minh">Ho Chi Minh</option>
+                  <option value="Hanoi">Hanoi</option>
+                  <option value="Da Nang">Da Nang</option>
+                  <option value="Can Tho">Can Tho</option>
+                  <option value="Hai Phong">Hai Phong</option>
+                  <option value="Nha Trang">Nha Trang</option>
+                  <option value="Vung Tau">Vung Tau</option>
+                </select>
+                <div className="invalid-feedback">
+                  Please select a valid city.
+                </div>
               </div>
-              <div className="row">
-                <div className="col-md-5 mb-3">
-                  <label htmlFor="country">Country</label>
-                  <select
-                    className="custom-select d-block w-100"
-                    id="country"
-                    required=""
-                  >
-                    <option value="">Choose...</option>
-                    <option>United States</option>
-                  </select>
-                  <div className="invalid-feedback">
-                    Please select a valid country.
+              <div className="mb-3">
+                <label htmlFor="paymentMethod">Payment Method</label>
+                <div className="d-block my-3">
+                  <div className="custom-control custom-radio">
+                    <input
+                      id="credit"
+                      name="paymentMethod"
+                      type="radio"
+                      className="custom-control-input"
+                      required=""
+                      value="Credit card"
+                      checked={formData.paymentMethod === "Credit card"}
+                      onChange={handleRadioChange}
+                    />
+                    <label className="custom-control-label" htmlFor="credit">
+                      Credit card
+                    </label>
+                  </div>
+                  <div className="custom-control custom-radio">
+                    <input
+                      id="cod"
+                      name="paymentMethod"
+                      type="radio"
+                      className="custom-control-input"
+                      required=""
+                      value="COD"
+                      checked={formData.paymentMethod === "COD"}
+                      onChange={handleRadioChange}
+                    />
+                    <label className="custom-control-label" htmlFor="cod">
+                      Cash on Delivery (COD)
+                    </label>
                   </div>
                 </div>
-                <div className="col-md-4 mb-3">
-                  <label htmlFor="state">State</label>
-                  <select
-                    className="custom-select d-block w-100"
-                    id="state"
-                    required=""
-                  >
-                    <option value="">Choose...</option>
-                    <option>California</option>
-                  </select>
-                  <div className="invalid-feedback">
-                    Please provide a valid state.
-                  </div>
-                </div>
-                <div className="col-md-3 mb-3">
-                  <label htmlFor="zip">Zip</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="zip"
-                    placeholder=""
-                    required=""
-                  />
-                  <div className="invalid-feedback">Zip code required.</div>
+                <div className="invalid-feedback">
+                  Please select a valid payment method.
                 </div>
               </div>
               <hr className="mb-4" />
-              <div className="custom-control custom-checkbox">
-                <input
-                  type="checkbox"
-                  className="custom-control-input"
-                  id="same-address"
-                />
-                <label className="custom-control-label" htmlFor="same-address">
-                  Shipping address is the same as my billing address
-                </label>
-              </div>
-              <div className="custom-control custom-checkbox">
-                <input
-                  type="checkbox"
-                  className="custom-control-input"
-                  id="save-info"
-                />
-                <label className="custom-control-label" htmlFor="save-info">
-                  Save this information for next time
-                </label>
-              </div>
-              <hr className="mb-4" />
-              <h4 className="mb-3">Payment</h4>
-              <div className="d-block my-3">
-                <div className="custom-control custom-radio">
-                  <input
-                    id="credit"
-                    name="paymentMethod"
-                    type="radio"
-                    className="custom-control-input"
-                    defaultChecked=""
-                    required=""
-                  />
-                  <label className="custom-control-label" htmlFor="credit">
-                    Credit card
-                  </label>
-                </div>
-                <div className="custom-control custom-radio">
-                  <input
-                    id="debit"
-                    name="paymentMethod"
-                    type="radio"
-                    className="custom-control-input"
-                    required=""
-                  />
-                  <label className="custom-control-label" htmlFor="debit">
-                    Debit card
-                  </label>
-                </div>
-                <div className="custom-control custom-radio">
-                  <input
-                    id="paypal"
-                    name="paymentMethod"
-                    type="radio"
-                    className="custom-control-input"
-                    required=""
-                  />
-                  <label className="custom-control-label" htmlFor="paypal">
-                    PayPal
-                  </label>
-                </div>
-              </div>
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label htmlFor="cc-name">Name on card</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="cc-name"
-                    placeholder=""
-                    required=""
-                  />
-                  <small className="text-muted">
-                    Full name as displayed on card
-                  </small>
-                  <div className="invalid-feedback">
-                    Name on card is required
-                  </div>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <label htmlFor="cc-number">Credit card number</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="cc-number"
-                    placeholder=""
-                    required=""
-                  />
-                  <div className="invalid-feedback">
-                    Credit card number is required
-                  </div>
-                </div>
-              </div>
-              <div className="row">
-                <div className="col-md-3 mb-3">
-                  <label htmlFor="cc-expiration">Expiration</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="cc-expiration"
-                    placeholder=""
-                    required=""
-                  />
-                  <div className="invalid-feedback">
-                    Expiration date required
-                  </div>
-                </div>
-                <div className="col-md-3 mb-3">
-                  <label htmlFor="cc-cvv">CVV</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="cc-cvv"
-                    placeholder=""
-                    required=""
-                  />
-                  <div className="invalid-feedback">Security code required</div>
-                </div>
-              </div>
-              <hr className="mb-4" />
-              <button
-                className="btn btn-primary btn-lg btn-block"
-                type="submit"
-              >
-                Continue to checkout
+              <button className="btn btn-primary btn-lg btn-block" type="submit">
+                Continue to payment
               </button>
             </form>
           </div>
         </div>
-        <footer className="my-5 pt-5 text-muted text-center text-small">
-          <p className="mb-1">© 2017-2019 Company Name</p>
-          <ul className="list-inline">
-            <li className="list-inline-item">
-              <a href="#">Privacy</a>
-            </li>
-            <li className="list-inline-item">
-              <a href="#">Terms</a>
-            </li>
-            <li className="list-inline-item">
-              <a href="#">Support</a>
-            </li>
-          </ul>
-        </footer>
       </div>
     </>
   );

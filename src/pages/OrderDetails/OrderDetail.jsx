@@ -7,12 +7,6 @@ const OrderDetail = () => {
         <div className="row d-flex justify-content-center align-items-center h-100">
           <div className="col-lg-10 col-xl-8">
             <div className="card" style={{ borderRadius: 10 }}>
-              <div className="card-header px-4 py-5">
-                <h5 className="text-muted mb-0">
-                  Thanks for your Order,{" "}
-                  <span style={{ color: "#a8729a" }}>Anna</span>!
-                </h5>
-              </div>
               <div className="card-body p-4">
                 <div className="d-flex justify-content-between align-items-center mb-4">
                   <p
@@ -20,9 +14,6 @@ const OrderDetail = () => {
                     style={{ color: "#a8729a" }}
                   >
                     Receipt
-                  </p>
-                  <p className="small text-muted mb-0">
-                    Receipt Voucher : 1KAU9-84UIL
                   </p>
                 </div>
                 <div className="card shadow-0 border mb-4">
@@ -68,7 +59,7 @@ const OrderDetail = () => {
                             className="progress-bar"
                             role="progressbar"
                             style={{
-                              width: "65%",
+                              width: "0%",
                               borderRadius: 16,
                               backgroundColor: "#a8729a",
                             }}
@@ -132,7 +123,7 @@ const OrderDetail = () => {
                             className="progress-bar"
                             role="progressbar"
                             style={{
-                              width: "20%",
+                              width: "0%",
                               borderRadius: 16,
                               backgroundColor: "#a8729a",
                             }}
@@ -160,25 +151,17 @@ const OrderDetail = () => {
                   </p>
                 </div>
                 <div className="d-flex justify-content-between pt-2">
-                  <p className="text-muted mb-0">Invoice Number : 788152</p>
-                  <p className="text-muted mb-0">
-                    <span className="fw-bold me-4">Discount</span> $19.00
-                  </p>
-                </div>
-                <div className="d-flex justify-content-between">
-                  <p className="text-muted mb-0">Invoice Date : 22 Dec,2019</p>
-                  <p className="text-muted mb-0">
-                    <span className="fw-bold me-4">GST 18%</span> 123
-                  </p>
-                </div>
-                <div className="d-flex justify-content-between mb-5">
-                  <p className="text-muted mb-0">
-                    Recepits Voucher : 18KU-62IIK
-                  </p>
+                  <p className="text-muted mb-0">Order ID : 788152</p>
                   <p className="text-muted mb-0">
                     <span className="fw-bold me-4">Delivery Charges</span> Free
                   </p>
                 </div>
+                <div className="d-flex justify-content-between">
+                  <p className="text-muted mb-0">Order Date : 22 Dec,2019</p>
+                </div>
+                <div className="d-flex justify-content-between mb-5">
+                </div>
+                
               </div>
               <div
                 className="card-footer border-0 px-4 py-5"

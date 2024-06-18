@@ -1,14 +1,12 @@
 import React, { useContext } from "react";
 import { ShopContext } from "../../context/shop-context";
-import { PRODUCTS } from "../../products";
 import { CartItem } from "./cart-item";
 import { useNavigate } from "react-router-dom";
-
 import "./cart.css";
-export const Cart = () => {
-  const { cartItems, getTotalCartAmount, checkout } = useContext(ShopContext);
-  const totalAmount = getTotalCartAmount();
 
+export const Cart = () => {
+  const { cartItems, getTotalCartAmount, products, clearCart } = useContext(ShopContext);
+  const totalAmount = getTotalCartAmount();
   const navigate = useNavigate();
 
   return (
@@ -17,10 +15,11 @@ export const Cart = () => {
         <h1>Your Cart Items</h1>
       </div>
       <div className="cart">
-        {PRODUCTS.map((product) => {
+        {products.map((product) => {
           if (cartItems[product.id] !== 0) {
-            return <CartItem data={product} />;
+            return <CartItem data={product} key={product.id} />;
           }
+          return null;
         })}
       </div>
 
@@ -28,18 +27,11 @@ export const Cart = () => {
         <div className="checkout">
           <p> Tổng tiền: ${totalAmount} </p>
           <button onClick={() => navigate("/")}> Quay về </button>
-          <button
-            onClick={() => {
-              checkout();
-              navigate("/checkout");
-            }}
-          >
-            {" "}
-            Mua hàng{" "}
-          </button>
+          <button onClick={() => navigate("/order")}> Mua hàng </button>
+          <button onClick={clearCart}>Xóa giỏ hàng</button>
         </div>
       ) : (
-        <h1> Your Shopping Cart is Empty</h1>
+        <h1>Your Shopping Cart is Empty</h1>
       )}
     </div>
   );

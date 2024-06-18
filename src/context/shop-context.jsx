@@ -1,24 +1,38 @@
-import { createContext, useEffect, useState } from "react";
-import { PRODUCTS } from "../products";
-
+import { createContext, useState, useEffect } from "react";
+import { getAllProducts } from "../services/ProductService";
 export const ShopContext = createContext(null);
 
-const getDefaultCart = () => {
+const getDefaultCart = (products) => {
   let cart = {};
-  for (let i = 1; i < PRODUCTS.length + 1; i++) {
-    cart[i] = 0;
-  }
+  products.forEach(product => {
+    cart[product.id] = 0;
+  });
   return cart;
 };
 
 export const ShopContextProvider = (props) => {
-  const [cartItems, setCartItems] = useState(getDefaultCart());
+  const [cartItems, setCartItems] = useState({});
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const productsData = await getAllProducts();
+        setProducts(productsData);
+        setCartItems(getDefaultCart(productsData));
+      } catch (error) {
+        console.error("Error loading products", error);
+      }
+    };
+
+    loadProducts();
+  }, []);
 
   const getTotalCartAmount = () => {
     let totalAmount = 0;
     for (const item in cartItems) {
       if (cartItems[item] > 0) {
-        let itemInfo = PRODUCTS.find((product) => product.id === Number(item));
+        let itemInfo = products.find((product) => product.id === item);
         totalAmount += cartItems[item] * itemInfo.price;
       }
     }
@@ -36,18 +50,19 @@ export const ShopContextProvider = (props) => {
   const updateCartItemCount = (newAmount, itemId) => {
     setCartItems((prev) => ({ ...prev, [itemId]: newAmount }));
   };
-
-  const checkout = () => {
-    setCartItems(getDefaultCart());
+  
+  const clearCart = () => {
+    setCartItems(getDefaultCart(products));
   };
 
   const contextValue = {
+    products,
     cartItems,
     addToCart,
     updateCartItemCount,
     removeFromCart,
     getTotalCartAmount,
-    checkout,
+    clearCart
   };
 
   return (

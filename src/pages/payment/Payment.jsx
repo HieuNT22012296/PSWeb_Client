@@ -1,7 +1,46 @@
-import React from "react";
+import React, { useContext, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./Payment.css";
+import { Link } from "react-router-dom";
+import { ShopContext } from "../../context/shop-context";
+import { processPayment } from "../../services/PaymentService"; // Import hàm processPayment
 
 export const Payment = () => {
+  const { getTotalCartAmount } = useContext(ShopContext);
+  const total = getTotalCartAmount();
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("cod");
+  const navigate = useNavigate();
+  const location = useLocation();
+  const orderData = location.state?.orderData;
+
+  const handlePaymentMethodChange = (e) => {
+    setSelectedPaymentMethod(e.target.value);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const paymentInfo = {
+      orderId: orderData.id,
+      Total: total,
+      paymentMethod: selectedPaymentMethod,
+      paymentDate: new Date(),
+    };
+
+    try {
+      const response = await processPayment(paymentInfo);
+      console.log("Payment processed:", response);
+      if (response.success) {
+        navigate("/payment-success");
+      } else {
+        navigate("/payment-failure");
+      }
+    } catch (error) {
+      console.error("Error processing payment:", error);
+      navigate("/payment-failure");
+    }
+  };
+
   return (
     <section className="payment-section">
       <div className="container py-5">
@@ -16,59 +55,29 @@ export const Payment = () => {
                   </h5>
                   <span className="ps-2">Pay</span>
                 </div>
-                <h4 className="text-success">$85.00</h4>
-                <h4>Diabetes Pump &amp; Supplies</h4>
-                <div className="product-image">
-                  <img src="C:\Users\Admin\Desktop\psweb_client\PSWeb_Client\src\assets\products\1.png" alt="Product" />
-                </div>
-                <div className="d-flex pt-2">
-                  <div>
-                    <p>
-                      <b>
-                        Insurance Responsibility{" "}
-                        <span className="text-success">$71.76</span>
-                      </b>
-                    </p>
-                  </div>
-                  <div className="ms-auto">
-                    <p className="text-primary">
-                      <i className="fas fa-plus-circle text-primary pe-1" />
-                      Add insurance card
-                    </p>
-                  </div>
-                </div>
+                <h4>Payment Details</h4>
                 <p>
-                  Insurance claims and all necessary dependencies will be submitted
-                  to your insurer for the covered portion of this order.
+                  Ensure you have reviewed all the details before proceeding with the payment.
                 </p>
-                <div className="rounded d-flex bg-body-tertiary">
-                  <div className="p-2">Aetna-Open Access</div>
-                  <div className="ms-auto p-2">OAP</div>
-                </div>
                 <hr />
                 <div className="pt-2">
-                  <div className="d-flex pb-2">
-                    <div>
-                      <p>
-                        <b>
-                          Patient Balance{" "}
-                          <span className="text-success">$13.24</span>
-                        </b>
-                      </p>
+                  <form className="pb-3" onSubmit={handleSubmit}>
+                    <div className="d-flex flex-row pb-3">
+                      <div className="d-flex align-items-center pe-2">
+                        <input
+                          className="form-check-input"
+                          type="radio"
+                          name="paymentMethod"
+                          id="cod"
+                          value="cod"
+                          checked={selectedPaymentMethod === "cod"}
+                          onChange={handlePaymentMethodChange}
+                        />
+                      </div>
+                      <div className="rounded border d-flex w-100 p-3 align-items-center">
+                        <p className="mb-0">Cash on Delivery (COD)</p>
+                      </div>
                     </div>
-                    <div className="ms-auto">
-                      <p className="text-primary">
-                        <i className="fas fa-plus-circle text-primary pe-1" />
-                        Add payment card
-                      </p>
-                    </div>
-                  </div>
-                  <p>
-                    This is an estimate for the portion of your order (not covered
-                    by insurance) due today. Once insurance finalizes their review,
-                    refunds and/or balances will reconcile automatically.
-                  </p>
-                  <form className="pb-3">
                     <div className="d-flex flex-row pb-3">
                       <div className="d-flex align-items-center pe-2">
                         <input
@@ -77,7 +86,8 @@ export const Payment = () => {
                           name="paymentMethod"
                           id="visaCard"
                           value="visa"
-                          defaultChecked
+                          checked={selectedPaymentMethod === "visa"}
+                          onChange={handlePaymentMethodChange}
                         />
                       </div>
                       <div className="rounded border d-flex w-100 p-3 align-items-center">
@@ -85,10 +95,9 @@ export const Payment = () => {
                           <i className="fab fa-cc-visa fa-lg text-primary pe-2" />
                           Visa Debit Card
                         </p>
-                        <div className="ms-auto">************3456</div>
                       </div>
                     </div>
-                    <div className="d-flex flex-row">
+                    <div className="d-flex flex-row pb-3">
                       <div className="d-flex align-items-center pe-2">
                         <input
                           className="form-check-input"
@@ -96,6 +105,8 @@ export const Payment = () => {
                           name="paymentMethod"
                           id="masterCard"
                           value="mastercard"
+                          checked={selectedPaymentMethod === "mastercard"}
+                          onChange={handlePaymentMethodChange}
                         />
                       </div>
                       <div className="rounded border d-flex w-100 p-3 align-items-center">
@@ -103,81 +114,83 @@ export const Payment = () => {
                           <i className="fab fa-cc-mastercard fa-lg text-body pe-2" />
                           Mastercard Office
                         </p>
-                        <div className="ms-auto">************1038</div>
                       </div>
                     </div>
+                    <div className="d-flex flex-row pb-3">
+                      <div className="d-flex align-items-center pe-2">
+                        <input
+                          className="form-check-input"
+                          type="radio"
+                          name="paymentMethod"
+                          id="banking"
+                          value="banking"
+                          checked={selectedPaymentMethod === "banking"}
+                          onChange={handlePaymentMethodChange}
+                        />
+                      </div>
+                      <div className="rounded border d-flex w-100 p-3 align-items-center">
+                        <p className="mb-0">Internet Banking</p>
+                      </div>
+                    </div>
+                    <div className="d-flex flex-row pb-3">
+                      <div className="d-flex align-items-center pe-2">
+                        <input
+                          className="form-check-input"
+                          type="radio"
+                          name="paymentMethod"
+                          id="qr"
+                          value="qr"
+                          checked={selectedPaymentMethod === "qr"}
+                          onChange={handlePaymentMethodChange}
+                        />
+                      </div>
+                      <div className="rounded border d-flex w-100 p-3 align-items-center">
+                        <p className="mb-0">QR Code Payment</p>
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      className="btn btn-primary btn-block btn-lg"
+                    >
+                      Proceed to payment
+                    </button>
                   </form>
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-block btn-lg"
-                  >
-                    Proceed to payment
-                  </button>
                 </div>
               </div>
               <div className="col-md-5 col-xl-4 offset-xl-1">
                 <div className="py-4 d-flex justify-content-end">
                   <h6>
-                    <a href="#!">Cancel and return to website</a>
+                    <Link to="/">
+                      Cancel and return to website
+                    </Link>
                   </h6>
                 </div>
-                <div className="rounded d-flex flex-column p-2 bg-body-tertiary">
-                  <div className="p-2 me-3">
-                    <h4>Order Recap</h4>
+                <div className="rounded d-flex flex-column p-3 bg-body-tertiary">
+                  <h4 className="pb-3">Order Recap</h4>
+                  <div className="p-2 d-flex justify-content-between">
+                    <div className="fw-bold">Order ID</div>
+                    <div>{orderData?.id}</div>
                   </div>
-                  <div className="p-2 d-flex">
-                    <div className="col-8">Contracted Price</div>
-                    <div className="ms-auto">$186.76</div>
+                  <div className="p-2 d-flex justify-content-between">
+                    <div className="fw-bold">Total</div>
+                    <div>${orderData?.total_price}</div>
                   </div>
-                  <div className="p-2 d-flex">
-                    <div className="col-8">Amount toward deductible</div>
-                    <div className="ms-auto">$0.00</div>
+                  <div className="p-2 d-flex justify-content-between">
+                    <div className="fw-bold">Currency</div>
+                    <div>USD</div>
                   </div>
-                  <div className="p-2 d-flex">
-                    <div className="col-8">Coinsurance (0%)</div>
-                    <div className="ms-auto">+ $0.00</div>
+                  <div className="p-2 d-flex justify-content-between">
+                    <div className="fw-bold">Payment Date</div>
+                    <div>{orderData?.created_at}</div>
                   </div>
-                  <div className="p-2 d-flex">
-                    <div className="col-8">Copayment</div>
-                    <div className="ms-auto">+ $40.00</div>
+                  <div className="p-2 d-flex justify-content-between">
+                    <div className="fw-bold">Status</div>
+                    <div>Pending</div>
                   </div>
-                  <div className="border-top px-2 mx-2" />
-                  <div className="p-2 d-flex pt-3">
-                    <div className="col-8">
-                      Total Deductible, Coinsurance, and Copay
-                    </div>
-                    <div className="ms-auto">$40.00</div>
-                  </div>
-                  <div className="p-2 d-flex">
-                    <div className="col-8">
-                      Maximum out-of-pocket on Insurance Policy (not reached)
-                    </div>
-                    <div className="ms-auto">$6500.00</div>
-                  </div>
-                  <div className="border-top px-2 mx-2" />
-                  <div className="p-2 d-flex pt-3">
-                    <div className="col-8">Insurance Responsibility</div>
-                    <div className="ms-auto">
-                      <b>$71.76</b>
-                    </div>
-                  </div>
-                  <div className="p-2 d-flex">
-                    <div className="col-8">
-                      Patient Balance{" "}
-                      <span className="fa fa-question-circle text-dark" />
-                    </div>
-                    <div className="ms-auto">
-                      <b>$71.76</b>
-                    </div>
-                  </div>
-                  <div className="border-top px-2 mx-2" />
-                  <div className="p-2 d-flex pt-3">
-                    <div className="col-8">
-                      <b>Total</b>
-                    </div>
-                    <div className="ms-auto">
-                      <b className="text-success">$85.00</b>
-                    </div>
+                  <div className="border-top my-3" />
+                  <div className="p-2 d-flex justify-content-between">
+                    <div className="fw-bold">Total</div>
+                    <div className="text-success">{total}</div>
                   </div>
                 </div>
               </div>
