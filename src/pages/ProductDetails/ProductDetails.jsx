@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import './ProductDetails.css';
 import { ShopContext } from "../../context/shop-context";
 import { getProductByID } from "../../services/ProductService";
+import { useSelector } from "react-redux";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -12,6 +13,9 @@ const ProductDetails = () => {
   const { addToCart } = useContext(ShopContext); // Lấy hàm addToCart từ ShopContext
   const [showNotification, setShowNotification] = useState(false); // Trạng thái để hiển thị thông báo
 
+  const user = useSelector((state) => state.user)
+  const navigate = useNavigate()
+  
   useEffect(() => {
     const loadProduct = async () => {
       try {
@@ -36,14 +40,23 @@ const ProductDetails = () => {
     setQuantity(value);
   };
 
+  const handleNavigateLogin = () => {
+    navigate("/sign-in");
+  };
+
   const handleAddToCart = () => {
-    for (let i = 0; i < quantity; i++) {
-      addToCart(id);
+    if(user?.id) {
+      for (let i = 0; i < quantity; i++) {
+        addToCart(id);
+      }
+      setShowNotification(true);
+      setTimeout(() => {
+        setShowNotification(false);
+      }, 2000); // Hiển thị thông báo trong 2 giây
+    } else {
+      handleNavigateLogin()
     }
-    setShowNotification(true);
-    setTimeout(() => {
-      setShowNotification(false);
-    }, 2000); // Hiển thị thông báo trong 2 giây
+   
   };
 
   return (

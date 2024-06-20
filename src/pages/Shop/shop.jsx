@@ -3,6 +3,8 @@ import { ShopContext } from "../../context/shop-context";
 import { Product } from "./product";
 import { useNavigate } from "react-router-dom";
 import "./shop.css";
+import { Navbar } from "../../components/navbar";
+import Footer from "../../components/Footer/Footer";
 
 export const Shop = () => {
   const { products } = useContext(ShopContext);
@@ -13,18 +15,25 @@ export const Shop = () => {
   };
 
   return (
-    <div className="shop">
-      <div className="shopTitle">
-        <h1>HyperRaze Shop</h1>
-      </div>
+    <div>
+      <Navbar />
+      <div className="shop">
+        <div className="shopTitle">
+          <h1>HyperRaze Shop</h1>
+        </div>
 
-      <div className="products">
-        {products.map((product) => (
-          <div key={product.id} onClick={() => handleProductClick(product.id)}>
-            <Product data={product} />
-          </div>
-        ))}
+        <div className="products">
+          {products.map((product) => (
+            <div
+              key={product.id}
+              onClick={() => handleProductClick(product.id)}
+            >
+              <Product data={product} />
+            </div>
+          ))}
+        </div>
       </div>
+      <Footer />
     </div>
   );
 };

@@ -1,8 +1,85 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import "./Profile.css";
+import { useDispatch, useSelector } from "react-redux";
+import * as UserService from "../../services/UserService";
+import { useMutationHooks } from "../../hooks/useMutationHook";
+import * as message from "../../components/Message/Message";
+import { updateUser } from "../../redux/Slice/UserSlice";
+import { Button, Upload, Input, Form } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
+import { getBase64 } from "../../utils";
+import { Navbar } from "../../components/navbar";
 
 const Profile = () => {
+  const user = useSelector((state) => state.user);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [avatar, setAvatar] = useState("");
+  const [city, setCity] = useState("");
+
+  const mutation = useMutationHooks((data) => {
+    const { id, ...rests } = data;
+    return UserService.updateUser(id, rests);
+  });
+
+  const dispatch = useDispatch();
+  const { data, isLoading, isSuccess, isError } = mutation;
+
+  useEffect(() => {
+    if (user?.id) {
+      handleGetDetailsUser(user.id);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (isSuccess) {
+      message.success("Profile updated successfully!");
+      handleGetDetailsUser(user?.id);
+    } else if (isError) {
+      message.error("Error updating profile.");
+    }
+  }, [isSuccess, isError]);
+
+  const handleGetDetailsUser = async (id) => {
+    const res = await UserService.getDetailsUser(id);
+    const userData = res?.data;
+    if (userData) {
+      dispatch(updateUser(userData));
+      setName(userData.name);
+      setEmail(userData.email);
+      setPhone(userData.phone);
+      setAddress(userData.address);
+      setAvatar(userData.avatar);
+      setCity(userData.city);
+    }
+  };
+
+  const handleOnchangeAvatar = async ({ fileList }) => {
+    const file = fileList[0];
+    if (file) {
+      if (!file.url && !file.preview) {
+        file.preview = await getBase64(file.originFileObj);
+      }
+      setAvatar(file.preview);
+    }
+  };
+
+  const handleUpdate = () => {
+    mutation.mutate({
+      id: user?.id,
+      name,
+      email,
+      phone,
+      address,
+      avatar,
+      city
+    });
+  };
   return (
     <section className="h-100 gradient-custom-2">
+      <Navbar isHiddenSearch isHiddenCart />
       <div className="container py-5 h-100">
         <div className="row d-flex justify-content-center">
           <div className="col col-lg-9 col-xl-8">
@@ -15,26 +92,41 @@ const Profile = () => {
                   className="ms-4 mt-5 d-flex flex-column"
                   style={{ width: 150 }}
                 >
-                  <img
-                    src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-profiles/avatar-1.webp"
-                    alt="Generic placeholder image"
-                    className="img-fluid img-thumbnail mt-4 mb-2"
-                    style={{ width: 150, zIndex: 1 }}
-                  />
-                  <button
-                    type="button"
-                    data-mdb-button-init=""
-                    data-mdb-ripple-init=""
-                    className="btn btn-outline-dark text-body"
-                    data-mdb-ripple-color="dark"
-                    style={{ zIndex: 1 }}
+                  {avatar ? (
+                    <img
+                      src={avatar}
+                      alt="Avatar"
+                      className="img-fluid img-thumbnail mt-4 mb-5"
+                      style={{ width: 150, zIndex: 1}}
+                    />
+                  ) : (
+                    <img
+                      src="https://cdn.pixabay.com/photo/2017/07/18/23/23/user-2517433_640.png"
+                      alt="Generic placeholder image"
+                      className="img-fluid img-thumbnail mt-4 mb-2"
+                      style={{ width: 150, zIndex: 1 }}
+                    />
+                  )}
+                  <Upload
+                    showUploadList={false}
+                    beforeUpload={() => false}
+                    onChange={handleOnchangeAvatar}
                   >
-                    Edit profile
-                  </button>
+                    <Button
+                      type="button"
+                      data-mdb-button-init=""
+                      data-mdb-ripple-init=""
+                      className="btn btn-outline-dark text-body text-center-btn" 
+                      data-mdb-ripple-color="dark"
+                      style={{ zIndex: 1 }}
+                    >
+                      Edit profile
+                    </Button>
+                  </Upload>
                 </div>
-                <div className="ms-3" style={{ marginTop: 130 }}>
-                  <h5>Andy Horwitz</h5>
-                  <p>New York</p>
+                <div className="ms-3" style={{ marginTop: 110 }}>
+                  <h5>{name || "User Name"}</h5>
+                  <p>{email || "User Email"}</p>
                 </div>
               </div>
               <div className="p-4 text-black bg-body-tertiary">
@@ -57,9 +149,46 @@ const Profile = () => {
                 <div className="mb-5  text-body">
                   <p className="lead fw-normal mb-1">About</p>
                   <div className="p-4 bg-body-tertiary">
-                    <p className="font-italic mb-1">Web Developer</p>
-                    <p className="font-italic mb-1">Lives in New York</p>
-                    <p className="font-italic mb-0">Photographer</p>
+                  <Form layout="vertical" onFinish={handleUpdate}>
+                      <Form.Item label="Name">
+                        <Input
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                        />
+                      </Form.Item>
+                      <Form.Item label="Email">
+                        <Input
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                        />
+                      </Form.Item>
+                      <Form.Item label="Phone">
+                        <Input
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                        />
+                      </Form.Item>
+                      <Form.Item label="Address">
+                        <Input
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                        />
+                      </Form.Item>
+                      <Form.Item label="City">
+                        <Input
+                          value={city}
+                          onChange={(e) => setCity(e.target.value)}
+                        />
+                      </Form.Item>
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        loading={isLoading}
+                        className="custom-update-button"
+                      >
+                        Update
+                      </Button>
+                    </Form>
                   </div>
                 </div>
                 <div className="d-flex justify-content-between align-items-center mb-4 text-body">

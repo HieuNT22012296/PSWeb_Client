@@ -1,10 +1,12 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { ShopContext } from "../../context/shop-context";
 import { postOrder } from "../../services/OrderService";
 import { useNavigate } from "react-router-dom";
-
+import { useSelector } from "react-redux";
 
 const Order = () => {
+  const user = useSelector((state) => state.user)
+
   const { cartItems, products, getTotalCartAmount } = useContext(ShopContext);
   const totalAmount = getTotalCartAmount();
   const navigate = useNavigate();
@@ -16,6 +18,18 @@ const Order = () => {
     phone: "",
     paymentMethod: "",
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        fullName: user.name || "",
+        address: user.address || "",
+        city: user.city || "",
+        phone: user.phone || "",
+        paymentMethod: "",
+      });
+    }
+  }, [user]);
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
@@ -49,7 +63,7 @@ const Order = () => {
       payment_method: formData.paymentMethod,
       total_price: totalAmount.toString(), // Convert total price to string
       shipping_price: "5.00", // Add actual shipping price if any
-      user_id: 1, // Replace with actual user ID
+      user_id: user.id, // Replace with actual user ID
       is_paid: false,
       paid_at: null,
       is_delivered: false,
@@ -190,7 +204,7 @@ const Order = () => {
                   value={formData.city}
                   onChange={handleInputChange}
                 >
-                  <option value="">Choose...</option>
+                  <option value={formData.city}>{formData.city}</option>
                   <option value="Ho Chi Minh">Ho Chi Minh</option>
                   <option value="Hanoi">Hanoi</option>
                   <option value="Da Nang">Da Nang</option>

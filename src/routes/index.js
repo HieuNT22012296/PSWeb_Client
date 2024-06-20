@@ -14,7 +14,7 @@ import OrderList from "../pages/Order/OrderList";
 
 export const routes = [
   {
-    path: "/login",
+    path: "/sign-in",
     page: Login,
   },
   {
@@ -34,7 +34,7 @@ export const routes = [
     page: Payment,
   },
   {
-    path: "/profile",
+    path: "/profile-user",
     page: Profile,
   },
   {
@@ -50,7 +50,7 @@ export const routes = [
     page: ProductDetails,
   },
   {
-    path: "/dashboard",
+    path: "/system/admin",
     page: Admin,
   },
   {

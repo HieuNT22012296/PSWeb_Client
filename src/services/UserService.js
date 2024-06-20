@@ -1,10 +1,12 @@
 import axios from "axios";
 
-const baseUrl = "http://localhost:3001/api";
+export const axiosJWT = axios.create()
+
+const baseUrl = "https://localhost:7195/api";
 
 export const signUpUser = async (data) => {
   try {
-    const res = await axios.post(`${baseUrl}/user/sign-up`, data);
+    const res = await axios.post(`${baseUrl}/user/register`, data);
     return res.data;
   } catch (error) {
     console.error(error);
@@ -14,7 +16,7 @@ export const signUpUser = async (data) => {
 
 export const loginUser = async (data) => {
   try {
-    const res = await axios.post(`${baseUrl}/user/sign-in`, data);
+    const res = await axios.post(`${baseUrl}/user/login`, data);
     return res.data;
   } catch (error) {
     if (error.response && error.response.status === 404) {
@@ -33,7 +35,7 @@ export const loginUser = async (data) => {
 
 export const logoutUser = async () => {
   try {
-    const res = await axios.post(`${baseUrl}/user/log-out`);
+    const res = await axios.post(`${baseUrl}/user/logout`);
     return res.data;
   } catch (error) {
     console.error(error);
@@ -99,3 +101,12 @@ export const deleteManyUser = async (data) => {
     throw error;
   }
 };
+
+export const refreshToken = async (refreshToken) => {
+  const res = await axios.post(`${process.env.REACT_APP_API_URL}/user/refresh-token`, {} , {
+      headers: {
+          token: `Bearer ${refreshToken}`,
+      }
+  })
+  return res.data
+}

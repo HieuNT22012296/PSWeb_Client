@@ -1,15 +1,27 @@
 import React, { useContext } from "react";
 import { ShopContext } from "../../context/shop-context";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 export const Product = (props) => {
+  const user = useSelector((state) => state.user);
+  const navigate = useNavigate();
   const { id, name, price, image } = props.data;
   const { addToCart, cartItems } = useContext(ShopContext);
 
   const cartItemCount = cartItems[id] || 0;
 
+  const handleNavigateLogin = () => {
+    navigate("/sign-in");
+  };
+
   const handleAddToCartClick = (e) => {
-    e.stopPropagation(); // Ngăn chặn sự lan truyền của sự kiện click
-    addToCart(id);
+    if (user?.id) {
+      e.stopPropagation(); // Prevent event propagation
+      addToCart(id);
+    } else {
+      handleNavigateLogin();
+    }
   };
 
   return (
