@@ -1,10 +1,11 @@
-import { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect } from "react";
 import { getAllProducts } from "../services/ProductService";
+
 export const ShopContext = createContext(null);
 
 const getDefaultCart = (products) => {
   let cart = {};
-  products.forEach(product => {
+  products.forEach((product) => {
     cart[product.id] = 0;
   });
   return cart;
@@ -13,6 +14,7 @@ const getDefaultCart = (products) => {
 export const ShopContextProvider = (props) => {
   const [cartItems, setCartItems] = useState({});
   const [products, setProducts] = useState([]);
+  const [searchKeyword, setSearchKeyword] = useState(""); // State for search keyword
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -50,7 +52,7 @@ export const ShopContextProvider = (props) => {
   const updateCartItemCount = (newAmount, itemId) => {
     setCartItems((prev) => ({ ...prev, [itemId]: newAmount }));
   };
-  
+
   const clearCart = () => {
     setCartItems(getDefaultCart(products));
   };
@@ -62,7 +64,9 @@ export const ShopContextProvider = (props) => {
     updateCartItemCount,
     removeFromCart,
     getTotalCartAmount,
-    clearCart
+    clearCart,
+    searchKeyword, // Include searchKeyword in context value
+    setSearchKeyword, // Function to update searchKeyword
   };
 
   return (

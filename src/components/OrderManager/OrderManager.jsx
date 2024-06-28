@@ -1,17 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import { SearchOutlined } from "@ant-design/icons";
-import { Button, Form, Space } from "antd";
+import { Button, Form, Space, Input } from "antd";
 import TableComponent from "../TableComponent/TableComponent";
-import InputComponent from "../InputComponent/InputComponent";
-// import { useMutationHooks } from "../../hooks/useMutationHook";
 import { useQuery } from "@tanstack/react-query";
 import * as OrderService from "../../services/OrderService";
-// import * as message from "../../components/Message/Message";
 import { convertPrice } from "../../utils";
 import { useSelector } from "react-redux";
-// import { orderContant } from "../../contant";
 
 const OrderManager = () => {
+  const [searchText, setSearchText] = useState("");
+  const [searchedColumn, setSearchedColumn] = useState("");
+
   const user = useSelector((state) => state?.user);
 
   const getAllOrders = async () => {
@@ -22,11 +21,15 @@ const OrderManager = () => {
   const queryOrder = useQuery({ queryKey: ["orders"], queryFn: getAllOrders });
   const { isLoading: isLoadingOrders, data: orders } = queryOrder;
 
-  const handleSearch = (selectedKeys, confirm, dataIndex) => {
-    confirm();
+  console.log(orders);
+
+  const handleSearch = () => {
+    setSearchedColumn("userName");
   };
-  const handleReset = (clearFilters) => {
-    clearFilters();
+
+  const handleReset = () => {
+    setSearchText("");
+    setSearchedColumn("");
   };
 
   const getColumnSearchProps = (dataIndex) => ({
@@ -42,7 +45,7 @@ const OrderManager = () => {
         }}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        <InputComponent
+        <Input
           placeholder={`Search ${dataIndex}`}
           value={selectedKeys[0]}
           onChange={(e) =>
@@ -92,6 +95,7 @@ const OrderManager = () => {
     },
     onFilterDropdownOpenChange: (visible) => {
       if (visible) {
+        console.log(`Dropdown open for ${dataIndex}`);
       }
     },
   });
@@ -102,6 +106,12 @@ const OrderManager = () => {
       dataIndex: "userName",
       sorter: (a, b) => a.userName.length - b.userName.length,
       ...getColumnSearchProps("userName"),
+      filteredValue: searchedColumn === "userName" ? [searchText] : null,
+      onFilter: (value, record) => {
+return record.userName
+          ? record.userName.toString().toLowerCase().includes(value.toLowerCase())
+          : "";
+      },
     },
     {
       title: "Phone",
@@ -127,12 +137,6 @@ const OrderManager = () => {
       sorter: (a, b) => a.isDelivered.length - b.isDelivered.length,
       ...getColumnSearchProps("isDelivered"),
     },
-    // {
-    //   title: "Payment method",
-    //   dataIndex: "paymentMethod",
-    //   sorter: (a, b) => a.paymentMethod.length - b.paymentMethod.length,
-    //   ...getColumnSearchProps("paymentMethod"),
-    // },
     {
       title: "Total price",
       dataIndex: "totalPrice",
@@ -141,25 +145,38 @@ const OrderManager = () => {
     },
   ];
 
-  const dataTable =
-    orders?.data?.length &&
-    orders?.data?.map((order) => {
-      return {
-        ...order,
-        key: order._id,
-        userName: order?.shippingAddress?.fullName || "",
-        phone: order?.shippingAddress?.phone || "",
-        address: order?.shippingAddress?.address || "",
-        isPaid: order?.isPaid ? "TRUE" : "FALSE",
-        isDelivered: order?.isDelivered ? "TRUE" : "FALSE",
-        totalPrice: convertPrice(order?.totalPrice) || "",
-      };
-    });
+  const dataTable = orders?.map((order) => ({
+    key: order.id,
+    userName: order.shipping_address.full_name || "",
+    phone: order.shipping_address.phone || "",
+    address: order.shipping_address.address || "",
+    isPaid: order.isPaid ? "TRUE" : "FALSE",
+    isDelivered: order.isDelivered ? "TRUE" : "FALSE",
+    totalPrice: convertPrice(order.total_price) || "",
+  })) || [];
+
+  console.log('DataTable:', dataTable);
 
   return (
     <div>
       <h3>Order Management</h3>
       <div style={{ marginTop: "20px" }}>
+        <Space style={{ marginBottom: 16 }}>
+          <Input
+            placeholder="Search User Name"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 200 }}
+          />
+          <Button
+            type="primary"
+            onClick={handleSearch}
+            icon={<SearchOutlined />}
+          >
+            Search
+          </Button>
+          <Button onClick={handleReset}>Reset</Button>
+        </Space>
         <TableComponent
           columns={columns}
           isLoading={isLoadingOrders}

@@ -1,10 +1,10 @@
 import axios from "axios";
 
-const baseUrl = "http://127.0.0.1:8000/order"
+const baseUrl = "http://localhost:8000/order"
 
 export const getAllOrder = async () => {
     try {
-      const res = await axios.post(`${baseUrl}/order`);
+      const res = await axios.get(`${baseUrl}/`);
       return res.data;
     } catch (error) {
       console.error(error);

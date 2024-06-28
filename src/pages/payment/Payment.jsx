@@ -4,6 +4,7 @@ import "./Payment.css";
 import { Link } from "react-router-dom";
 import { ShopContext } from "../../context/shop-context";
 import { processPayment } from "../../services/PaymentService"; // Import hàm processPayment
+import * as message from "../../components/Message/Message";
 
 export const Payment = () => {
   const formatDate = (isoString) => {
@@ -35,11 +36,14 @@ export const Payment = () => {
     try {
       const response = await processPayment(paymentInfo);
       console.log("Payment processed:", response);
-      if (response.success) {
+      if (response.status === 200 || response.status === 201) {
         navigate("/");
+        message.success("Payment successfully");
       }
     } catch (error) {
       console.error("Error processing payment:", error);
+      message.error("Payment failed");
+      
     }
   };
 

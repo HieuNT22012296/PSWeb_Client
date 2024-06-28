@@ -2,7 +2,7 @@ import axios from "axios";
 
 export const axiosJWT = axios.create()
 
-const baseUrl = "https://localhost:7195/api";
+const baseUrl = "http://localhost:8083/api";
 
 export const signUpUser = async (data) => {
   try {

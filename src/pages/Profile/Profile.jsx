@@ -79,7 +79,6 @@ const Profile = () => {
   };
   return (
     <section className="h-100 gradient-custom-2">
-      <Navbar isHiddenSearch isHiddenCart />
       <div className="container py-5 h-100">
         <div className="row d-flex justify-content-center">
           <div className="col col-lg-9 col-xl-8">

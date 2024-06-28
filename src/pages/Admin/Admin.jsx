@@ -11,6 +11,7 @@ import {
 import UserManager from "../../components/UserManager/UserManager";
 import ProductManager from "../../components/ProductManager/ProductManager";
 import OrderManager from "../../components/OrderManager/OrderManager";
+import PaymentManager from "../../components/PaymentManager/PaymentManager";
 import NavbarAdmin from "../../components/NavbarAdmin/NavbarAdmin";
 
 const Admin = () => {
@@ -31,6 +32,8 @@ const Admin = () => {
         return <ProductManager />;
       case "order":
         return <OrderManager />;
+      case "payment":
+        return <PaymentManager />;
       default:
         return <></>;
     }

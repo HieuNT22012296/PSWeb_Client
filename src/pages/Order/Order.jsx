@@ -3,6 +3,7 @@ import { ShopContext } from "../../context/shop-context";
 import { postOrder } from "../../services/OrderService";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { Navbar } from "../../components/navbar";
 
 const Order = () => {
   const user = useSelector((state) => state.user)
@@ -92,6 +93,8 @@ const Order = () => {
   };
 
   return (
+    <div>
+      <Navbar/>
     <>
       <meta charSet="utf-8" />
       <meta
@@ -264,6 +267,7 @@ const Order = () => {
         </div>
       </div>
     </>
+    </div>
   );
 };
 

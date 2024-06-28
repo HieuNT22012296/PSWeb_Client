@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import { ShoppingCart } from "phosphor-react";
 import "./navbar.css";
@@ -8,19 +8,17 @@ import { useDispatch, useSelector } from "react-redux";
 import * as UserService from "../services/UserService";
 import { resetUser } from "../redux/Slice/UserSlice";
 import { UserOutlined } from "@ant-design/icons";
-// import { searchProduct } from "../redux/Slice/ProductSlice";
+import { ShopContext } from "../context/shop-context";
 
-export const Navbar = (isHiddenSearch = false, isHiddenCart = false) => {
+export const Navbar = ({ isHiddenSearch = false, isHiddenCart = false }) => {
   const navigate = useNavigate();
   const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
+  const { setSearchKeyword } = useContext(ShopContext);
   const [userName, setUserName] = useState("");
   const [userAvatar, setUserAvatar] = useState("");
   const [search, setSearch] = useState("");
   const [isOpenPopup, setIsOpenPopup] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  console.log(user);
 
   useEffect(() => {
     initMDB({ Dropdown, Collapse });
@@ -50,7 +48,7 @@ export const Navbar = (isHiddenSearch = false, isHiddenCart = false) => {
     } else if (type === "admin") {
       navigate("/system/admin");
     } else if (type === "order") {
-      navigate("/order-user", {
+      navigate(`/orders/${user.id}`, {
         state: {
           id: user?.id,
         },
@@ -62,7 +60,10 @@ export const Navbar = (isHiddenSearch = false, isHiddenCart = false) => {
 
   const onSearchChange = (e) => {
     setSearch(e.target.value);
-    console.log(e.target.value);
+  };
+
+  const handleSearchClick = () => {
+    setSearchKeyword(search);
   };
 
   const handleCartClick = () => {
@@ -75,22 +76,43 @@ export const Navbar = (isHiddenSearch = false, isHiddenCart = false) => {
 
   return (
     <div className="navbar">
-      <Link to="/" className="shop-link">Home</Link>
-
+      <Link to="/" className="shop-link">
+        Home
+      </Link>
+      {!isHiddenSearch && (
+        <form className="input-group w-auto my-auto d-flex ms-2 ms-lg-5">
+          <input
+            onChange={onSearchChange}
+            type="search"
+            className="form-control rounded"
+            placeholder="Search"
+            style={{ minWidth: "200px" }}
+          />
+          <span
+            className="input-group-text border-0 d-flex ms-1"
+            style={{ backgroundColor: "#48CCCD", borderRadius: 5 }}
+            onClick={handleSearchClick}
+          >
+            <i style={{ cursor: "pointer" }} className="fas fa-search"></i>
+          </span>
+        </form>
+      )}
       <div className="links d-flex">
         <Link to="/">About Us</Link>
         <Link to="/contact">Contact</Link>
-        {isHiddenCart && (
-          <div onClick={handleCartClick} style={{ cursor: "pointer" }}>
-            <ShoppingCart style={{color: 'white', margin: "20px"}} size={32} />
+        {!isHiddenCart && (
+<div onClick={handleCartClick} style={{ cursor: "pointer" }}>
+            <ShoppingCart
+              style={{ color: "white", margin: "20px" }}
+              size={32}
+            />
           </div>
         )}
       </div>
-      
+
       {/* Avatar */}
-      <div className="dropdown me-5 ">
+      <div className="dropdown me-5">
         <a
-          data-mdb-dropdown-init
           className="dropdown-toggle d-flex align-items-center hidden-arrow"
           style={{ cursor: "pointer" }}
           role="button"
@@ -104,21 +126,25 @@ export const Navbar = (isHiddenSearch = false, isHiddenCart = false) => {
               src={userAvatar}
               className="rounded-circle"
               height="25"
-              alt="Black and White Portrait of a Man"
+              alt="User Avatar"
               loading="lazy"
               style={{ width: "35px", height: "35px" }}
             />
           ) : (
             <UserOutlined style={{ fontSize: "25px", color: "white" }} />
           )}
-
           {user?.id ? (
             <span className="ms-2 fw-bold me-2" style={{ color: "#528B8B" }}>
               {userName.length ? userName : user.email}
             </span>
           ) : (
             <span
-              style={{ fontWeight: 'bold', marginLeft: "15px", cursor: "pointer", color: "green" }}
+              style={{
+                fontWeight: "bold",
+                marginLeft: "15px",
+                cursor: "pointer",
+                color: "green",
+              }}
               onClick={handleNavigateLogin}
             >
               Login
@@ -126,7 +152,11 @@ export const Navbar = (isHiddenSearch = false, isHiddenCart = false) => {
           )}
         </a>
         {user?.id && (
-          <ul className={`dropdown-menu dropdown-menu ${isOpenPopup ? 'show' : ''}`}>
+          <ul
+            className={`dropdown-menu dropdown-menu ${
+              isOpenPopup ? "show" : ""
+            }`}
+          >
             <li>
               <a
                 style={{ cursor: "pointer" }}

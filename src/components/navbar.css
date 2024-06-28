@@ -17,7 +17,7 @@
 .links {
   display: flex;
   align-items: center;
-  margin-left: 50%; /* Pushes the .links container to the right */
+  margin-left: 10%; /* Pushes the .links container to the right */
 }
 
 .links a {

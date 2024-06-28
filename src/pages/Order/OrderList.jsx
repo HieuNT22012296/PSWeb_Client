@@ -3,6 +3,7 @@ import "./OrderList.css";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getAllOrderByUserID } from "../../services/OrderService";
+import { Navbar } from "../../components/navbar";
 
 const OrderList = () => {
     const { user_id } = useParams();
@@ -22,6 +23,8 @@ const OrderList = () => {
     }, [user_id]);
 
     return (
+        <div>
+            <Navbar/>
         <>
             <meta charSet="utf-8" />
             <meta
@@ -161,6 +164,7 @@ const OrderList = () => {
                 </div>
             </div>
         </>
+        </div>
     );
 };
 

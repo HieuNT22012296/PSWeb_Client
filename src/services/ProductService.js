@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = 'http://localhost:5137/api/Products'; // Thay URL thật sự vào đây
+const API_URL = 'https://localhost:7217/api/Products'; // Thay URL thật sự vào đây
 
 export const getAllProducts = async () => {
   try {

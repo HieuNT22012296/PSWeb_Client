@@ -1,8 +1,26 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./NavbarAdmin.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import * as UserService from "../../services/UserService"; 
+import { resetUser } from "../../redux/Slice/UserSlice"; 
 
 const NavbarAdmin = () => {
+  const user = useSelector((state) => state.user);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    setUserName(user?.name);
+  }, [user?.name, user?.avatar]);
+
+  const handleLogout = async () => {
+    await UserService.logoutUser();
+    dispatch(resetUser());
+    navigate("/sign-in");
+  };
+
   return (
     <>
       {/* Navbar */}
@@ -11,7 +29,7 @@ const NavbarAdmin = () => {
         <div className="container-fluid">
           {/* Navbar brand */}
           <a className="navbar-brand" href="#">
-            Admin
+            HyperRaze
           </a>
           {/* Toggle button */}
           <button
@@ -130,21 +148,35 @@ const NavbarAdmin = () => {
             </ul>
             {/* Right links */}
             {/* Search form */}
-            <form className="d-flex input-group w-auto ms-lg-3 my-3 my-lg-0">
-              <input
-                type="search"
-                className="form-control"
-                placeholder="Search"
-                aria-label="Search"
-              />
-              <button
-                className="btn btn-primary"
-                type="button"
-                data-mdb-ripple-color="dark"
+            {user?.id ? (
+              <span className="ms-2 fw-bold me-2" style={{ color: "#528B8B" }}>
+                {userName.length ? userName : user.email}
+              </span>
+            ) : (
+              <span
+                style={{
+                  fontWeight: "bold",
+                  marginLeft: "15px",
+                  cursor: "pointer",
+                  color: "green",
+                }}
               >
-                Search
-              </button>
-            </form>
+                Login
+              </span>
+            )}
+            {user?.id && (
+              <span
+                style={{
+                  fontWeight: "bold",
+                  marginLeft: "15px",
+                  cursor: "pointer",
+                  color: "red",
+                }}
+                onClick={handleLogout}
+              >
+                Logout
+              </span>
+            )}
           </div>
           {/* Collapsible wrapper */}
         </div>

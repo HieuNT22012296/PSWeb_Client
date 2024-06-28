@@ -5,6 +5,8 @@ import './ProductDetails.css';
 import { ShopContext } from "../../context/shop-context";
 import { getProductByID } from "../../services/ProductService";
 import { useSelector } from "react-redux";
+import { Navbar } from "../../components/navbar";
+import { convertPrice } from "../../utils";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -15,7 +17,7 @@ const ProductDetails = () => {
 
   const user = useSelector((state) => state.user)
   const navigate = useNavigate()
-  
+
   useEffect(() => {
     const loadProduct = async () => {
       try {
@@ -33,7 +35,7 @@ const ProductDetails = () => {
     return <div>Loading...</div>;
   }
 
-  const { name, price, image, type, rating, description } = product;
+  const { name, price, image, category, inventory, rating, discount, selled, description, createdAt, updatedAt } = product;
 
   const handleQuantityChange = (event) => {
     const value = Math.max(1, Number(event.target.value));
@@ -56,13 +58,14 @@ const ProductDetails = () => {
     } else {
       handleNavigateLogin()
     }
-   
   };
 
   return (
+    <div>
+      <Navbar/>
     <>
       <section className="py-5">
-        <div className="container">
+        <div className="container product-detail-container"> {/* Thêm lớp product-detail-container vào đây */}
           <div className="row gx-5">
             <aside className="col-lg-6">
               <div className="border rounded-4 mb-3 d-flex justify-content-center">
@@ -98,6 +101,7 @@ const ProductDetails = () => {
                     height={60}
                     className="rounded-2"
                     src={product.image}
+                    alt={name}
                   />
                 </a>
               </div>
@@ -120,19 +124,22 @@ const ProductDetails = () => {
                   </div>
                   <span className="text-muted">
                     <i className="fas fa-shopping-basket fa-sm mx-1" />
-                    154 orders
+                    {selled} orders
                   </span>
-                  <span className="text-success ms-2">In stock</span>
+                  <span className="text-success ms-2">{inventory > 0 ? "In stock" : "Out of stock"}</span>
                 </div>
                 <div className="mb-3">
-                  <span className="h5">${price}</span>
+                  <span className="h5">{convertPrice(price)}</span>
+                  {discount > 0 && <span className="text-danger ms-2">-{discount}%</span>}
                 </div>
                 <p>{description}</p>
                 <div className="row">
-                  <dt className="col-3">Type:</dt>
-                  <dd className="col-9">{type}</dd>
-                  <dt className="col-3">Color</dt>
-                  <dd className="col-9">Brown</dd>
+                  <dt className="col-3">Category:</dt>
+                  <dd className="col-9">{category}</dd>
+                  <dt className="col-3">Inventory:</dt>
+                  <dd className="col-9">{inventory}</dd>
+                
+
                 </div>
                 <hr />
                 <div className="row mb-4">
@@ -182,6 +189,8 @@ const ProductDetails = () => {
         </div>
       </section>
     </>
+    </div>
   );
 };
+
 export default ProductDetails;

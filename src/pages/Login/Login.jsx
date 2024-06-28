@@ -28,6 +28,7 @@ const Login = () => {
         const uniqueNameData = JSON.parse(decoded.unique_name);
         if (uniqueNameData.isAdmin) {
           navigate("/system/admin");
+          handleGetDetailsUser(data?.id);
         } else {
           handleGetDetailsUser(data?.id);
           navigate("/");
