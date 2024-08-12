@@ -38,7 +38,7 @@ export const Navbar = ({ isHiddenSearch = false, isHiddenCart = false }) => {
   };
 
   const handleLogout = async () => {
-    await UserService.logoutUser();
+    localStorage.clear();
     dispatch(resetUser());
   };
 

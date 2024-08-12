@@ -3,7 +3,6 @@ import Register from "../pages/Register/Register";
 import Login from "../pages/Login/Login";
 import { Shop } from "../pages/Shop/shop";
 import { Cart } from "../pages/cart/cart";
-import { Payment } from "../pages/payment/Payment";
 import Profile from "../pages/Profile/Profile";
 import Order from "../pages/Order/Order";
 import OrderDetail from "../pages/OrderDetails/OrderDetail";
@@ -11,6 +10,8 @@ import ProductDetails from "../pages/ProductDetails/ProductDetails";
 import Admin from "../pages/Admin/Admin";
 import ContactForm from "../pages/contact/ContactForm";
 import OrderList from "../pages/Order/OrderList";
+import Success from "../pages/Payment/sucess";
+import Fail from "../pages/Payment/fail";
 
 export const routes = [
   {
@@ -28,10 +29,6 @@ export const routes = [
   {
     path: "/cart",
     page: Cart,
-  },
-  {
-    path: "/payment",
-    page: Payment,
   },
   {
     path: "/profile-user",
@@ -61,4 +58,12 @@ export const routes = [
     path: "/orders/:user_id",
     page: OrderList,
   },
+  {
+    path: "/payment/success",
+    page: Success,
+  },
+  {
+    path: "/payment/fail",
+    page: Fail,
+  }
 ];

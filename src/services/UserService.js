@@ -2,11 +2,11 @@ import axios from "axios";
 
 export const axiosJWT = axios.create()
 
-const baseUrl = "http://localhost:8083/api";
+const baseUrl = "http://127.0.0.1:8000";
 
 export const signUpUser = async (data) => {
   try {
-    const res = await axios.post(`${baseUrl}/user/register`, data);
+    const res = await axios.post(`${baseUrl}/register/`, data);
     return res.data;
   } catch (error) {
     console.error(error);
@@ -16,7 +16,7 @@ export const signUpUser = async (data) => {
 
 export const loginUser = async (data) => {
   try {
-    const res = await axios.post(`${baseUrl}/user/login`, data);
+    const res = await axios.post(`${baseUrl}/login/`, data);
     return res.data;
   } catch (error) {
     if (error.response && error.response.status === 404) {
@@ -33,19 +33,14 @@ export const loginUser = async (data) => {
   }
 };
 
-export const logoutUser = async () => {
-  try {
-    const res = await axios.post(`${baseUrl}/user/logout`);
-    return res.data;
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
-
 export const getDetailsUser = async (id) => {
+  const accessToken = localStorage.getItem("accessToken");
   try {
-    const res = await axios.get(`${baseUrl}/user/get-details/${id}`);
+    const res = await axios.get(`${baseUrl}/api/users/${id}/`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     return res.data;
   } catch (error) {
     if (error.response && error.response.status === 404) {
@@ -64,7 +59,12 @@ export const getDetailsUser = async (id) => {
 
 export const getAllUser = async () => {
   try {
-    const res = await axios.get(`${baseUrl}/user/getAll/`);
+    const accessToken = localStorage.getItem("accessToken");
+    const res = await axios.get(`${baseUrl}/api/users/`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+  });
     return res.data;
   } catch (error) {
     console.error(error);
@@ -72,9 +72,15 @@ export const getAllUser = async () => {
   }
 };
 
-export const updateUser = async (id, data) => {
+export const updateUser = async (id, formData) => {
+  const accessToken = localStorage.getItem("accessToken");
   try {
-    const res = await axios.put(`${baseUrl}/user/update-user/${id}`, data);
+    const res = await axios.put(`${baseUrl}/api/users/${id}/`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
     return res.data;
   } catch (error) {
     console.error(error);

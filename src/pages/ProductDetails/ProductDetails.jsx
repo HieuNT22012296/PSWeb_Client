@@ -6,7 +6,7 @@ import { ShopContext } from "../../context/shop-context";
 import { getProductByID } from "../../services/ProductService";
 import { useSelector } from "react-redux";
 import { Navbar } from "../../components/navbar";
-import { convertPrice } from "../../utils";
+import { formatPrice } from "../../utils";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -129,7 +129,7 @@ const ProductDetails = () => {
                   <span className="text-success ms-2">{inventory > 0 ? "In stock" : "Out of stock"}</span>
                 </div>
                 <div className="mb-3">
-                  <span className="h5">{convertPrice(price)}</span>
+                  <span className="h5">{formatPrice(price)}</span>
                   {discount > 0 && <span className="text-danger ms-2">-{discount}%</span>}
                 </div>
                 <p>{description}</p>

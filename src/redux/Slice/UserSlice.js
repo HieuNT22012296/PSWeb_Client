@@ -1,13 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  id: "",
+  id: "", 
   name: "",
   email: "",
   phone: "",
   address: "",
   avatar: "",
-  isAdmin: false,
   city: "",
 };
 
@@ -23,7 +22,6 @@ export const userSlice = createSlice({
         phone = "",
         address = "",
         avatar = "",
-        isAdmin,
         city = "",
       } = action.payload;
       state.id = id;
@@ -32,7 +30,6 @@ export const userSlice = createSlice({
       state.phone = phone;
       state.address = address;
       state.avatar = avatar;
-      state.isAdmin = isAdmin;
       state.city = city;
     },
     resetUser: (state) => {
@@ -42,7 +39,6 @@ export const userSlice = createSlice({
       state.phone = "";
       state.address = "";
       state.avatar = "";
-      state.isAdmin = false;
       state.city = "";
     },
   },

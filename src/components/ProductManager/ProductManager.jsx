@@ -10,7 +10,7 @@ import { Button, Form, Select, Space, Upload } from "antd";
 import TableComponent from "../TableComponent/TableComponent";
 import InputComponent from "../InputComponent/InputComponent";
 // import { WrapperUploadFile } from '../../pages/Profile/style'
-import { convertPrice, getBase64, renderOptions } from "../../utils";
+import { formatPrice, getBase64, renderOptions } from "../../utils";
 import * as ProductService from "../../services/ProductService";
 import { useMutationHooks } from "../../hooks/useMutationHook";
 // import Loading from '../Loading/Loading'
@@ -19,6 +19,8 @@ import { useQuery } from "@tanstack/react-query";
 import DrawerComponent from "../DrawerComponent/DrawerComponent";
 import { useSelector } from "react-redux";
 import ModalComponent from "../ModalComponent/ModalComponent";
+import { formatDate } from "../../utils";
+
 
 const ProductManager = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -95,46 +97,49 @@ const ProductManager = () => {
     return res
   };
 
-  const fetchGetDetailsProduct = async (rowSelected) => {
-    const res = await ProductService.getProductByID(rowSelected);
-    if (res?.id) {
-      setStateProductDetails({
-        name: res?.name,
-        category: res?.category,
-        price: res?.price,
-        inventory: res?.inventory,
-        rating: res?.rating,
-        description: res?.description,
-        image: res?.image,
-        discount: res?.discount,
-      });
-    }
-    setIsLoadingUpdate(false);
+  const handleDetailsProduct = (record) => {
+    setRowSelected(record.id); // Lưu ID sản phẩm được chọn
+    setIsLoadingUpdate(true);  // Đặt trạng thái loading cho quá trình lấy dữ liệu
+    setIsOpenDrawer(true);     // Mở Drawer
   };
-
-  // const fetchAllCategoryProduct = async () => {
-  //   const res = await ProductService.getAllCategoryProduct();
-  //   return res;
-  // };
-
-  useEffect(() => {
-    if (!isModalOpen) {
-      form.setFieldsValue(stateProductDetails);
-    } else {
-      form.setFieldsValue(initial());
-    }
-  }, [form, stateProductDetails, isModalOpen]);
-
+  
+  
   useEffect(() => {
     if (rowSelected && isOpenDrawer) {
-      setIsLoadingUpdate(true);
       fetchGetDetailsProduct(rowSelected);
     }
   }, [rowSelected, isOpenDrawer]);
-
-  const handleDetailsProduct = () => {
-    setIsOpenDrawer(true);
+  
+  // Hàm lấy thông tin chi tiết sản phẩm
+  const fetchGetDetailsProduct = async (id) => {
+    try {
+      const res = await ProductService.getProductByID(id);
+      if (res?.id) {
+        setStateProductDetails({
+          name: res.name,
+          category: res.category,
+          price: res.price,
+          inventory: res.inventory,
+          rating: res.rating,
+          description: res.description,
+          image: res.image,
+          discount: res.discount,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching product details:", error);
+    } finally {
+      setIsLoadingUpdate(false);
+    }
   };
+  
+  // Cập nhật form khi stateProductDetails thay đổi
+  useEffect(() => {
+    if (stateProductDetails) {
+      form.setFieldsValue(stateProductDetails);
+    }
+  }, [form, stateProductDetails]);
+  
 
   const handleDeleteManyProduct = (ids) => {
     mutationDeleteMany.mutate(
@@ -296,7 +301,7 @@ const ProductManager = () => {
         }
         return record.price <= 25000000;
       },
-      render: (price) => convertPrice(price),
+      render: (price) => formatPrice(price),
     },
     {
       title: "Rating",
@@ -361,19 +366,20 @@ const ProductManager = () => {
     },
   ];
 
-  const formatDate = (date) => {
-    const formattedDate = new Date(date);
-    const year = formattedDate.getFullYear();
-    const month = String(formattedDate.getMonth() + 1).padStart(2, "0");
-    const day = String(formattedDate.getDate()).padStart(2, "0");
-    return `${day}-${month}-${year}`;
-  };
-
-  const dataTable =
-    products?.length &&
-    products?.map((product) => {
-      return { ...product, key: product.id};
-    });
+  const dataTable = products?.map((product) => {
+    return {
+      key: product.id,
+      id: product.id, // Đảm bảo rằng id được thiết lập
+      name: product.name,
+      category: product.category,
+      price: product.price,
+      rating: product.rating,
+      selled: product.selled,
+      inventory: product.inventory,
+      createdAt: product.created_at,
+      updatedAt: product.updated_at,
+    };
+  });
 
   useEffect(() => {
     if (isSuccess) {
@@ -466,9 +472,9 @@ const ProductManager = () => {
       inventory: stateProduct.inventory,
       discount: stateProduct.discount,
       category: stateProduct.category
-        // stateProduct.category === "add_category"
-        //   ? stateProduct.newCategory
-        //   : stateProduct.category,
+      // stateProduct.category === "add_category"
+      //   ? stateProduct.newCategory
+      //   : stateProduct.category,
     };
     mutation.mutate(params, {
       onSettled: () => {
@@ -489,29 +495,9 @@ const ProductManager = () => {
       ...stateProductDetails,
       [e.target.name]: e.target.value,
     });
+    form.setFieldsValue({ [e.target.name]: e.target.value });
   };
 
-  const handleOnChangeAvatar = async ({ fileList }) => {
-    const file = fileList[0];
-    if (!file.url && !file.preview) {
-      file.preview = await getBase64(file.originFileObj);
-    }
-    setStateProduct({
-      ...stateProduct,
-      image: file.preview,
-    });
-  };
-
-  const handleOnChangeAvatarDetails = async ({ fileList }) => {
-    const file = fileList[0];
-    if (!file.url && !file.preview) {
-      file.preview = await getBase64(file.originFileObj);
-    }
-    setStateProductDetails({
-      ...stateProductDetails,
-      image: file.preview,
-    });
-  };
 
   const onUpdateProduct = () => {
     mutationUpdate.mutate(
@@ -585,7 +571,7 @@ const ProductManager = () => {
               rules={[{ required: true, message: "Please input your name!" }]}
             >
               <InputComponent
-                value={stateProduct.name}
+                value={stateProductDetails.name}
                 onChange={handleOnChange}
                 name="name"
               />
@@ -600,14 +586,14 @@ const ProductManager = () => {
             >
               <Select
                 name="category"
-                value={stateProduct.category}
+                value={stateProductDetails.category}
                 onChange={handleOnChangeSelect}
-                // options={renderOptions(categoryProduct?.data?.data)}
+              // options={renderOptions(categoryProduct?.data?.data)}
               />
             </Form.Item>
             {stateProduct.category === "add_category" && (
               <Form.Item
-                style={{marginLeft: '-9px'}}
+                style={{ marginLeft: '-9px' }}
                 label="NEW CATEGORY"
                 name="new"
                 rules={[
@@ -615,8 +601,8 @@ const ProductManager = () => {
                 ]}
               >
                 <InputComponent
-                  style={{marginLeft: '7px', width: '355px'}}
-                  value={stateProduct.newCategory}
+                  style={{ marginLeft: '7px', width: '355px' }}
+                  value={stateProductDetails.newCategory}
                   onChange={handleOnChange}
                   name="newCategory"
                 />
@@ -646,7 +632,7 @@ const ProductManager = () => {
               ]}
             >
               <InputComponent
-                value={stateProduct.inventory}
+                value={stateProductDetails.inventory}
                 onChange={handleOnChange}
                 name="inventory"
               />
@@ -658,7 +644,7 @@ const ProductManager = () => {
               rules={[{ required: true, message: "Please input your rating!" }]}
             >
               <InputComponent
-                value={stateProduct.rating}
+                value={stateProductDetails.rating}
                 onChange={handleOnChange}
                 name="rating"
               />
@@ -675,7 +661,7 @@ const ProductManager = () => {
               ]}
             >
               <InputComponent
-                value={stateProduct.discount}
+                value={stateProductDetails.discount}
                 onChange={handleOnChange}
                 name="discount"
               />
@@ -689,7 +675,7 @@ const ProductManager = () => {
               ]}
             >
               <InputComponent
-                value={stateProduct.description}
+                value={stateProductDetails.description}
                 onChange={handleOnChange}
                 name="description"
               />
@@ -698,27 +684,27 @@ const ProductManager = () => {
             <Form.Item
               label="IMAGE"
               name="image"
-              rules={[{ required: true, message: "Please input your image!" }]}
+              rules={[{ required: true, message: "Please input your image URL!" }]}
             >
-              <Upload onChange={handleOnChangeAvatar} maxCount={1}>
-                <Button style={{ marginLeft: "100px", display: "flex" }}>
-                  Select image
-                </Button>
-                {stateProduct?.image && (
-                  <img
-                    src={stateProduct?.image}
-                    style={{
-                      height: "60px",
-                      width: "60px",
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      marginLeft: "115px",
-                      marginTop: "10px",
-                    }}
-                    alt="avatar"
-                  />
-                )}
-              </Upload>
+              <InputComponent
+                value={stateProductDetails.image}
+                onChange={handleOnChange}
+                name="image"
+                placeholder="Enter image URL"
+              />
+              {stateProduct?.image && (
+                <img
+                  src={stateProduct?.image}
+                  style={{
+                    height: "60px",
+                    width: "60px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    marginTop: "10px",
+                  }}
+                  alt="product"
+                />
+              )}
             </Form.Item>
 
             <Form.Item wrapperCol={{ offset: 10, span: 16 }}>
@@ -844,33 +830,27 @@ const ProductManager = () => {
             <Form.Item
               label="IMAGE"
               name="image"
-              rules={[{ required: true, message: "Please input your image!" }]}
+              rules={[{ required: true, message: "Please input your image URL!" }]}
             >
-              <Upload onChange={handleOnChangeAvatarDetails} maxCount={1}>
-                <Button
+              <InputComponent
+                value={stateProductDetails.image}
+                onChange={handleOnChangeDetails}
+                name="image"
+                placeholder="Enter image URL"
+              />
+              {stateProductDetails?.image && (
+                <img
+                  src={stateProductDetails?.image}
                   style={{
-                    marginLeft: "170px",
-                    marginBottom: "10px",
-                    display: "flex",
+                    height: "60px",
+                    width: "60px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    marginTop: "10px",
                   }}
-                >
-                  Select image
-                </Button>
-                {stateProductDetails?.image && (
-                  <img
-                    src={stateProductDetails?.image}
-                    style={{
-                      height: "60px",
-                      width: "60px",
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      marginLeft: "185px",
-                      marginTop: "10px",
-                    }}
-                    alt="avatar"
-                  />
-                )}
-              </Upload>
+                  alt="product"
+                />
+              )}
             </Form.Item>
 
             <Form.Item wrapperCol={{ offset: 13, span: 16 }}>

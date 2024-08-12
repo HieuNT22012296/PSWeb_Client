@@ -1,7 +1,7 @@
 import { Input } from "antd";
 import React from "react";
 
-const InputComponent = ({ size, placeholder, bordered, style, ...rests }) => {
+const InputComponent = ({ size, placeholder, variant, style, ...rests }) => {
   
   const formatPrice = (price) => {
     return Number(price).toLocaleString("vi-VN", {
@@ -14,7 +14,7 @@ const InputComponent = ({ size, placeholder, bordered, style, ...rests }) => {
     <Input
       size={size}
       placeholder={placeholder}
-      bordered={bordered}
+      variant={variant}
       style={style}
       {...rests}
     />

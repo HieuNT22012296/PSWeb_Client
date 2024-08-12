@@ -1,6 +1,6 @@
   import React, { useContext } from "react";
   import { ShopContext } from "../../context/shop-context";
-  import { convertPrice } from "../../utils";
+  import { formatPrice } from "../../utils";
 
   export const CartItem = (props) => {
     const { id, name, price, image } = props.data;
@@ -14,7 +14,7 @@
           <p>
             <b>{name}</b>
           </p>
-          <p>Price: {convertPrice(price)}</p>
+          <p>Price: {formatPrice(price)}</p>
           <div className="countHandler">
             <button onClick={() => removeFromCart(id)}> - </button>
             <input

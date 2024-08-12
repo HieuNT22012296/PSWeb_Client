@@ -4,7 +4,7 @@ import { Button, Form, Space, Input } from "antd";
 import TableComponent from "../TableComponent/TableComponent";
 import { useQuery } from "@tanstack/react-query";
 import * as OrderService from "../../services/OrderService";
-import { convertPrice } from "../../utils";
+import { formatPrice } from "../../utils";
 import { useSelector } from "react-redux";
 
 const OrderManager = () => {
@@ -152,7 +152,7 @@ return record.userName
     address: order.shipping_address.address || "",
     isPaid: order.isPaid ? "TRUE" : "FALSE",
     isDelivered: order.isDelivered ? "TRUE" : "FALSE",
-    totalPrice: convertPrice(order.total_price) || "",
+    totalPrice: formatPrice(order.total_price) || "",
   })) || [];
 
   console.log('DataTable:', dataTable);

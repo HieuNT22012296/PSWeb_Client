@@ -1,16 +1,16 @@
 import React, { useContext, useEffect, useState } from "react";
 import { ShopContext } from "../../context/shop-context";
 import { postOrder } from "../../services/OrderService";
-import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Navbar } from "../../components/navbar";
+import axios from "axios";
+import { formatPrice } from "../../utils";
+import Footer from "../../components/Footer/Footer";
 
 const Order = () => {
-  const user = useSelector((state) => state.user)
-
+  const user = useSelector((state) => state.user);
   const { cartItems, products, getTotalCartAmount } = useContext(ShopContext);
   const totalAmount = getTotalCartAmount();
-  const navigate = useNavigate();
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     fullName: "",
@@ -44,27 +44,24 @@ const Order = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
   
-    // Tạo danh sách các sản phẩm trong đơn hàng
     const orderItems = products.filter(product => cartItems[product.id] > 0)
       .map(product => ({
-        product_id: product.id,  // Convert product_id to string
+        product_id: product.id, 
         name: product.name,
         quantity: cartItems[product.id],
-        price: product.price.toString(), // Convert price to string
+        price: product.price.toString(), 
       }));
   
-    // Kiểm tra xem giỏ hàng có sản phẩm hay không
     if (orderItems.length === 0) {
       setError("Your cart is empty. Please add products to your cart before placing an order.");
       return;
     }
   
-    // Tạo dữ liệu đơn hàng
     const orderData = {
       payment_method: formData.paymentMethod,
-      total_price: totalAmount.toString(), // Convert total price to string
-      shipping_price: "5.00", // Add actual shipping price if any
-      user_id: user.id, // Replace with actual user ID
+      total_price: totalAmount.toString(),
+      shipping_price: "5.00",
+      user_id: user.id,
       is_paid: false,
       paid_at: null,
       is_delivered: false,
@@ -78,12 +75,19 @@ const Order = () => {
       },
     };
   
-    console.log("Order data:", orderData);  // Log order data for debugging
+    console.log("Order data:", orderData); 
   
     try {
       const response = await postOrder(orderData);
       console.log("Order posted successfully:", response);
-      navigate("/payment", { state: { orderData: response } }); 
+
+      const accessToken = localStorage.getItem("accessToken");
+      const res = await axios.post(`http://127.0.0.1:8000/api/payment/create-checkout-session/${response.id}/`, {}, {
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}`},
+      });
+    
+      const checkoutUrl = res.data.url;
+      window.location.href = checkoutUrl;
     } catch (error) {
       console.error("Failed to post order:", error);
       if (error.response && error.response.data) {
@@ -94,30 +98,7 @@ const Order = () => {
 
   return (
     <div>
-      <Navbar/>
-    <>
-      <meta charSet="utf-8" />
-      <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1, shrink-to-fit=no"
-      />
-      <link
-        rel="canonical"
-        href="https://getbootstrap.com/docs/4.3/examples/checkout/"
-      />
-      <link
-        href="/docs/4.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
-        crossOrigin="anonymous"
-      />
-      <style
-        dangerouslySetInnerHTML={{
-          __html:
-            "\n      .bd-placeholder-img {\n        font-size: 1.125rem;\n        text-anchor: middle;\n        -webkit-user-select: none;\n        -moz-user-select: none;\n        -ms-user-select: none;\n        user-select: none;\n      }\n\n      @media (min-width: 768px) {\n        .bd-placeholder-img-lg {\n          font-size: 3.5rem;\n        }\n      }\n    ",
-        }}
-      />
-      <link href="form-validation.css" rel="stylesheet" />
+      <Navbar />
       <div className="container mt-5 mb-5">
         <div className="row">
           <div className="col-md-4 order-md-2 mb-4">
@@ -135,7 +116,7 @@ const Order = () => {
                       <div>
                         <h6 className="my-0">{product.name} x {cartItems[product.id]}</h6>
                       </div>
-                      <span className="text-muted">${product.price}</span>
+                      <span className="text-muted ml-2">{formatPrice(product.price)}</span>
                     </li>
                   );
                 }
@@ -158,8 +139,7 @@ const Order = () => {
                     type="text"
                     className="form-control"
                     id="fullName"
-                    placeholder=""
-                    required=""
+                    required
                     value={formData.fullName}
                     onChange={handleInputChange}
                   />
@@ -174,7 +154,7 @@ const Order = () => {
                     className="form-control"
                     id="phone"
                     placeholder="123-456-7890"
-                    required=""
+                    required
                     value={formData.phone}
                     onChange={handleInputChange}
                   />
@@ -190,7 +170,7 @@ const Order = () => {
                   className="form-control"
                   id="address"
                   placeholder="1234 Main St"
-                  required=""
+                  required
                   value={formData.address}
                   onChange={handleInputChange}
                 />
@@ -203,7 +183,7 @@ const Order = () => {
                 <select
                   className="custom-select d-block w-100"
                   id="city"
-                  required=""
+                  required
                   value={formData.city}
                   onChange={handleInputChange}
                 >
@@ -229,7 +209,7 @@ const Order = () => {
                       name="paymentMethod"
                       type="radio"
                       className="custom-control-input"
-                      required=""
+                      required
                       value="Credit card"
                       checked={formData.paymentMethod === "Credit card"}
                       onChange={handleRadioChange}
@@ -244,7 +224,7 @@ const Order = () => {
                       name="paymentMethod"
                       type="radio"
                       className="custom-control-input"
-                      required=""
+                      required
                       value="COD"
                       checked={formData.paymentMethod === "COD"}
                       onChange={handleRadioChange}
@@ -266,7 +246,7 @@ const Order = () => {
           </div>
         </div>
       </div>
-    </>
+      <Footer/>
     </div>
   );
 };

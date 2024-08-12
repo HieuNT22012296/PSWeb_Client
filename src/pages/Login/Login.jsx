@@ -21,16 +21,28 @@ const Login = () => {
     if (isSuccess && data) {
       if (data?.status === "OK") {
         message.success("Logged in successfully");
-        const token = data?.accessToken;
 
+        const token = data?.access_token;
+        localStorage.setItem("accessToken", token);
         const decoded = jwtDecode(token);
+  
+        // Kiểm tra xem decoded có phải là một đối tượng hay không
+        let uniqueNameData;
+        if (typeof decoded === 'object') {
+          uniqueNameData = decoded;
+        } else if (typeof decoded === 'string') {
+          try {
+            uniqueNameData = JSON.parse(decoded);
+          } catch (error) {
+            console.error("Failed to parse JSON:", error);
+          }
+        }
 
-        const uniqueNameData = JSON.parse(decoded.unique_name);
-        if (uniqueNameData.isAdmin) {
+        if (uniqueNameData?.is_superuser) {
+          handleGetDetailsUser(uniqueNameData?.user_id);
           navigate("/system/admin");
-          handleGetDetailsUser(data?.id);
         } else {
-          handleGetDetailsUser(data?.id);
+          handleGetDetailsUser(uniqueNameData?.user_id);
           navigate("/");
         }
       } else {
@@ -41,7 +53,7 @@ const Login = () => {
 
   const handleGetDetailsUser = async (id) => {
     const res = await UserService.getDetailsUser(id);
-    dispatch(updateUser({ ...res?.data }));
+    dispatch(updateUser({ ...res}));
   };
 
   const handleNavigateSignUp = () => {

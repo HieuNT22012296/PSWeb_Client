@@ -1,8 +1,8 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8082/api/Payments";
+const API_URL = "http://localhost:8082/api";
 
-export const processPayment = async (paymentInfo) => {
+export const createCheckoutSession = async (paymentInfo) => {
   try {
     const response = await axios.post(API_URL, paymentInfo);
     return {

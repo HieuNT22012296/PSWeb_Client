@@ -8,7 +8,6 @@ import { Button, Form, Space, Upload } from "antd";
 import TableComponent from "../TableComponent/TableComponent";
 import InputComponent from "../InputComponent/InputComponent";
 import DrawerComponent from "../DrawerComponent/DrawerComponent";
-import Loading from "../Loading/Loading";
 import { useMutationHooks } from "../../hooks/useMutationHook";
 import { useQuery } from "@tanstack/react-query";
 import * as UserService from "../../services/UserService";
@@ -30,22 +29,22 @@ const UserManager = () => {
     name: "",
     email: "",
     phone: "",
-    isAdmin: false,
     avatar: "",
     address: "",
+    city: "",
   });
-console.log("stateUserDetails", stateUserDetails)
+
   const [form] = Form.useForm();
 
   const mutationUpdate = useMutationHooks((data) => {
     const { id, ...rests } = data;
+    console.log(rests);
     const res = UserService.updateUser(id, { ...rests });
     return res;
   });
 
   const mutationDelete = useMutationHooks((data) => {
-    const  {id}  = data;
-    
+    const { id } = data;
     const res = UserService.deleteUser(id);
     return res;
   });
@@ -72,32 +71,36 @@ console.log("stateUserDetails", stateUserDetails)
     return res;
   };
 
-  const fetchGetDetailsUser = async (rowSelected) => {
-    const res = await UserService.getDetailsUser(rowSelected);
-   
-    if (res?.data) {
-      setStateUserDetails({
-        name: res?.data.name,
-        email: res?.data.email,
-        phone: res?.data.phone,
-        address: res?.data.address,
-        isAdmin: res?.data.isAdmin,
-        avatar: res?.data.avatar,
-      });
+  const fetchGetDetailsUser = async (id) => {
+    setIsLoadingUpdate(true);
+    try {
+      const res = await UserService.getDetailsUser(id);
+      if (res?.data) {
+        setStateUserDetails({
+          name: res?.data.name,
+          email: res?.data.email,
+          phone: res?.data.phone,
+          address: res?.data.address,
+          avatar: res?.data.avatar,
+          city: res?.data.city,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    } finally {
+      setIsLoadingUpdate(false);
     }
-    setIsLoadingUpdate(false);
   };
+
+  useEffect(() => {
+    if (rowSelected && isOpenDrawer) {
+      fetchGetDetailsUser(rowSelected);
+    }
+  }, [rowSelected, isOpenDrawer]);
 
   useEffect(() => {
     form.setFieldsValue(stateUserDetails);
   }, [form, stateUserDetails]);
-
-  useEffect(() => {
-    if (rowSelected && isOpenDrawer) {
-      setIsLoadingUpdate(true);
-      fetchGetDetailsUser(rowSelected);
-    }
-  }, [rowSelected, isOpenDrawer]);
 
   const handleDetailsUser = () => {
     setIsOpenDrawer(true);
@@ -125,9 +128,110 @@ console.log("stateUserDetails", stateUserDetails)
   } = mutationDeleteMany;
 
   const queryUser = useQuery({ queryKey: ["users"], queryFn: getAllUsers });
-
   const { isLoading: isLoadingUsers, data: users } = queryUser;
-  
+
+  useEffect(() => {
+    if (rowSelected !== null && users) {
+      const userData = users.find((user) => user.id === rowSelected);
+      if (userData) {
+        setStateUserDetails({
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone,
+          address: userData.address,
+          avatar: userData.avatar,
+          city: userData.city,
+        });
+        setIsOpenDrawer(true);
+      }
+    }
+  }, [rowSelected, users]);
+
+  useEffect(() => {
+    if (isSuccessUpdated && dataUpdated?.status === "OK") {
+      message.success();
+      handleCloseDrawer();
+    } else if (isErrorUpdated) {
+      message.error();
+    }
+  }, [isSuccessUpdated]);
+
+  useEffect(() => {
+    if (isSuccessDeleted && dataDeleted?.status === "OK") {
+      message.success();
+      handleCancelDelete();
+    } else if (isErrorDeleted) {
+      message.error();
+    }
+  }, [isSuccessDeleted]);
+
+  useEffect(() => {
+    if (isSuccessDeletedMany && dataDeletedMany?.status === "OK") {
+      message.success();
+    } else if (isErrorDeletedMany) {
+      message.error();
+    }
+  }, [isSuccessDeletedMany]);
+
+  const handleCloseDrawer = () => {
+    setIsOpenDrawer(false);
+    setStateUserDetails({
+      name: "",
+      email: "",
+      phone: "",
+      avatar: "",
+      address: "",
+      city: "",
+    });
+    form.resetFields();
+  };
+
+  const handleCancelDelete = () => {
+    setIsModalOpenDelete(false);
+  };
+
+  const handleDeleteUser = () => {
+    mutationDelete.mutate(
+      { id: rowSelected },
+      {
+        onSettled: () => {
+          queryUser.refetch();
+        },
+      }
+    );
+  };
+
+  const handleOnChangeDetails = (e) => {
+    setStateUserDetails({
+      ...stateUserDetails,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleOnChangeAvatarDetails = async ({ fileList }) => {
+    const file = fileList[0];
+    if (!file.url && !file.preview) {
+      file.preview = await getBase64(file.originFileObj);
+    }
+    setStateUserDetails({
+      ...stateUserDetails,
+      avatar: file.preview,
+    });
+  };
+
+  const onUpdateUser = () => {
+    const userDetailsToUpdate = { ...stateUserDetails };
+    delete userDetailsToUpdate.email; // Giữ lại nếu không cần cập nhật email
+    mutationUpdate.mutate(
+      { id: rowSelected, ...userDetailsToUpdate },
+      {
+        onSettled: () => {
+          queryUser.refetch();
+        },
+      }
+    );
+  };
+
   const renderAction = () => {
     return (
       <div>
@@ -214,6 +318,7 @@ console.log("stateUserDetails", stateUserDetails)
       }
     },
   });
+
   const columns = [
     {
       title: "Name",
@@ -230,7 +335,7 @@ console.log("stateUserDetails", stateUserDetails)
     {
       title: "Phone",
       dataIndex: "phone",
-      sorter: (a, b) => a.phone - b.phone,
+      sorter: (a, b) => a.phone.length - b.phone.length,
       ...getColumnSearchProps("phone"),
     },
     {
@@ -240,121 +345,22 @@ console.log("stateUserDetails", stateUserDetails)
       ...getColumnSearchProps("address"),
     },
     {
-      title: "Admin",
-      dataIndex: "isAdmin",
-      filters: [
-        {
-          text: "True",
-          value: true,
-        },
-        {
-          text: "False",
-          value: false,
-        },
-      ],
-    },
-    {
       title: "Action",
       dataIndex: "action",
       render: renderAction,
     },
   ];
-  const dataTable =
-    users?.data?.length &&
-    users?.data?.map((user) => {
-      return {
-        ...user,
-        key: user?.id,
-        phone: user?.phone || "",
-        address: user?.address || "",
-        isAdmin: user.isAdmin ? "TRUE" : "FALSE",
-      };
-    });
 
-  useEffect(() => {
-    if (isSuccessUpdated && dataUpdated?.status === "OK") {
-      message.success();
-      handleCloseDrawer();
-    } else if (isErrorUpdated) {
-      message.error();
-    }
-  }, [isSuccessUpdated]);
-
-  useEffect(() => {
-    if (isSuccessDeleted && dataDeleted?.status === "OK") {
-      message.success();
-      handleCancelDelete();
-    } else if (isErrorDeleted) {
-      message.error();
-    }
-  }, [isSuccessDeleted]);
-
-  useEffect(() => {
-    if (isSuccessDeletedMany && dataDeletedMany?.status === "OK") {
-      message.success();
-    } else if (isErrorDeletedMany) {
-      message.error();
-    }
-  }, [isSuccessDeletedMany]);
-
-  const handleCloseDrawer = () => {
-    setIsOpenDrawer(false);
-    setStateUserDetails({
-      name: "",
-      email: "",
-      phone: "",
-      isAdmin: "",
-    });
-    form.resetFields();
-  };
-
-  const handleCancelDelete = () => {
-    setIsModalOpenDelete(false);
-  };
-
-  const handleDeleteUser = () => {
-    mutationDelete.mutate(
-      { id: rowSelected },
-      {
-        onSettled: () => {
-          queryUser.refetch();
-        },
-      }
-    );
-  };
-
-  const handleOnChangeDetails = (e) => {
-    setStateUserDetails({
-      ...stateUserDetails,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleOnChangeAvatarDetails = async ({ fileList }) => {
-    const file = fileList[0];
-    if (!file.url && !file.preview) {
-      file.preview = await getBase64(file.originFileObj);
-    }
-    setStateUserDetails({
-      ...stateUserDetails,
-      avatar: file.preview,
-    });
-  };
-
-  // const triggerFileInput = () => {
-  //   fileInputRef.current.click();
-  // };
-
-  const onUpdateUser = () => {
-    mutationUpdate.mutate(
-      { id: rowSelected, ...stateUserDetails },
-      {
-        onSettled: () => {
-          queryUser.refetch();
-        },
-      }
-    );
-  };
+  const dataTable = Array.isArray(users) && users.length > 0
+    ? users.map((user) => ({
+      key: user.id,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone || "",
+      address: user.address || "",
+    }))
+    : [];
 
   return (
     <div>
@@ -365,9 +371,9 @@ console.log("stateUserDetails", stateUserDetails)
           columns={columns}
           isLoading={isLoadingUsers}
           data={dataTable}
-          onRow={(record, rowIndex) => {
+          onRow={(record) => {
             return {
-              onClick: (event) => {
+              onClick: () => {
                 setRowSelected(record.id);
               },
             };
@@ -376,7 +382,7 @@ console.log("stateUserDetails", stateUserDetails)
         <DrawerComponent
           title="User account details"
           isOpen={isOpenDrawer}
-          onClose={() => setIsOpenDrawer(false)}
+          onClose={handleCloseDrawer}
           width="50%"
         >
           <Form
@@ -437,8 +443,9 @@ console.log("stateUserDetails", stateUserDetails)
                 name="address"
               />
             </Form.Item>
+
             <Form.Item
-              label="City"
+              label="CITY"
               name="city"
               rules={[
                 { required: true, message: "Please input your city!" },
@@ -452,29 +459,15 @@ console.log("stateUserDetails", stateUserDetails)
             </Form.Item>
 
             <Form.Item
-              label="ADMIN"
-              name="isAdmin"
-              rules={[
-                {
-                  required: true,
-                  message: "Please input your permissions!",
-                },
-              ]}
-            >
-              <InputComponent
-                value={stateUserDetails.isAdmin}
-                onChange={handleOnChangeDetails}
-                name="isAdmin"
-              />
-            </Form.Item>
-
-            <Form.Item
               label="AVATAR"
               name="avatar"
               rules={[{ required: true, message: "Please input your avatar!" }]}
             >
               <Upload
-                onChange={handleOnChangeAvatarDetails} maxCount={1}>
+                fileList={[]} // Sử dụng `fileList` thay vì `value`
+                onChange={handleOnChangeAvatarDetails}
+                maxCount={1}
+              >
                 <Button
                   style={{
                     marginLeft: "170px",

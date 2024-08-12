@@ -16,7 +16,6 @@ const NavbarAdmin = () => {
   }, [user?.name, user?.avatar]);
 
   const handleLogout = async () => {
-    await UserService.logoutUser();
     dispatch(resetUser());
     navigate("/sign-in");
   };
